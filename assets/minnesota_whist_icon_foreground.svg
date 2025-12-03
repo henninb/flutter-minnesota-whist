@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="wGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#104b7b"/>
+      <stop offset="100%" stop-color="#0f8b83"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- Card only (for adaptive foreground) -->
+  <g transform="translate(96 82)" filter="url(#shadow)">
+    <rect x="0" y="0" width="320" height="360" rx="30" fill="#f6f7fb"/>
+    <rect x="10" y="10" width="300" height="340" rx="24" fill="#e5ebf2"/>
+    <rect x="22" y="22" width="276" height="316" rx="18" fill="#ffffff"/>
+  </g>
+
+  <g transform="translate(96 82)">
+    <g transform="translate(160 66)">
+      <polygon points="0,-34 9,-8 36,-8 14,8 22,34 0,18 -22,34 -14,8 -36,-8 -9,-8" fill="#e5b642"/>
+    </g>
+
+    <g fill="#c62828" transform="translate(76 74) scale(0.62)">
+      <path d="M58 0c-14 18-42 33-42 63 0 17 14 31 31 31 7 0 13-2 18-6 5 4 11 6 18 6 17 0 31-14 31-31 0-30-28-45-42-63 0 0-3-3-7-3s-7 3-7 3z"/>
+    </g>
+    <g fill="#111827" transform="translate(226 74) scale(0.62)">
+      <path d="M42 0c-13 0-24 11-24 24 0 16 17 28 34 41 17-13 34-25 34-41 0-13-11-24-24-24-6 0-12 3-16 7-4-4-10-7-16-7z"/>
+    </g>
+    <g transform="translate(82 210) scale(0.7)" fill="#111827">
+      <circle cx="24" cy="20" r="18"/>
+      <circle cx="52" cy="20" r="18"/>
+      <circle cx="38" cy="40" r="18"/>
+      <rect x="32" y="46" width="12" height="30" rx="6"/>
+    </g>
+    <g transform="translate(236 206) scale(0.72)" fill="#c62828">
+      <polygon points="32,0 64,38 32,76 0,38"/>
+    </g>
+
+    <text x="160" y="260" text-anchor="middle" font-family="Montserrat, 'Helvetica Neue', Arial, sans-serif"
+          font-size="152" font-weight="800" fill="#0a2f49" opacity="0.18">W</text>
+    <text x="160" y="252" text-anchor="middle" font-family="Montserrat, 'Helvetica Neue', Arial, sans-serif"
+          font-size="148" font-weight="800" fill="url(#wGradient)">W</text>
+
+    <text x="160" y="320" text-anchor="middle" font-family="Montserrat, 'Helvetica Neue', Arial, sans-serif"
+          font-size="36" font-weight="700" letter-spacing="4" fill="#0f5d5f">WHIST</text>
+  </g>
+</svg>
