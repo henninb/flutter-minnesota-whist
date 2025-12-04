@@ -18,8 +18,8 @@ void main() {
   print('✓ Created assets/minnesota_whist_icon_foreground.svg');
 
   print('\nNext steps:');
-  print('1. Convert SVG to PNG (1024x1024) using an online tool or ImageMagick:');
-  print('   - Visit https://svgtopng.com/ or use: convert -resize 1024x1024 assets/minnesota_whist_icon.svg assets/minnesota_whist_icon.png');
+  print('1. Convert SVG to PNG (512x512) using an online tool or ImageMagick:');
+  print('   - Visit https://svgtopng.com/ or use: convert -resize 512x512 assets/minnesota_whist_icon.svg assets/minnesota_whist_icon.png');
   print('2. Run: dart run flutter_launcher_icons');
   print('3. Rebuild your app to see the new icon!');
 }
