@@ -15,9 +15,23 @@ void main() {
       expect(state.variantType, equals(VariantType.classicWhist));
     });
 
-    test('variant property throws UnimplementedError (stub)', () {
+    test('variant property returns Minnesota Whist by default', () {
       final state = GameState();
-      expect(() => state.variant, throwsUnimplementedError);
+      final variant = state.variant;
+      expect(variant.name, equals('Minnesota Whist'));
+      expect(variant.usesBidding, isTrue);
+    });
+
+    test('variant property returns correct variant for other types', () {
+      // Only Minnesota Whist is implemented, others should throw
+      expect(
+        () => GameState(variantType: VariantType.classicWhist).variant,
+        throwsUnimplementedError,
+      );
+      expect(
+        () => GameState(variantType: VariantType.bidWhist).variant,
+        throwsUnimplementedError,
+      );
     });
 
     test('copyWith preserves variant type by default', () {

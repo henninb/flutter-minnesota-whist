@@ -1,4 +1,5 @@
 import 'game_variant.dart';
+import 'minnesota_whist_variant.dart';
 
 /// Enumeration of all supported whist variants
 enum VariantType {
@@ -43,29 +44,19 @@ extension VariantTypeExtension on VariantType {
   }
 
   /// Factory method to create variant instance
-  /// NOTE: This will be implemented once we create the variant classes
-  /// For now, it returns a stub implementation
   GameVariant createVariant() {
-    // TODO: Implement variant classes
-    // This is a temporary stub to allow compilation
-    throw UnimplementedError(
-      'Variant implementations not yet created. '
-      'This will be implemented in the next phase.',
-    );
-
-    // Future implementation will look like:
-    // switch (this) {
-    //   case VariantType.minnesotaWhist:
-    //     return MinnesotaWhistVariant();
-    //   case VariantType.classicWhist:
-    //     return ClassicWhistVariant();
-    //   case VariantType.bidWhist:
-    //     return BidWhistVariant();
-    //   case VariantType.ohHell:
-    //     return OhHellVariant();
-    //   case VariantType.widowWhist:
-    //     return WidowWhistVariant();
-    // }
+    switch (this) {
+      case VariantType.minnesotaWhist:
+        return const MinnesotaWhistVariant();
+      case VariantType.classicWhist:
+        throw UnimplementedError('Classic Whist variant not yet implemented');
+      case VariantType.bidWhist:
+        throw UnimplementedError('Bid Whist variant not yet implemented');
+      case VariantType.ohHell:
+        throw UnimplementedError('Oh Hell variant not yet implemented');
+      case VariantType.widowWhist:
+        throw UnimplementedError('Widow Whist variant not yet implemented');
+    }
   }
 
   /// Get variant from name (for serialization)

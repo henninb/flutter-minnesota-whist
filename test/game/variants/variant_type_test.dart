@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minnesota_whist/src/game/variants/variant_type.dart';
+import 'package:minnesota_whist/src/game/variants/game_variant.dart';
+import 'package:minnesota_whist/src/game/models/game_models.dart';
 
 void main() {
   group('VariantType', () {
@@ -129,32 +131,53 @@ void main() {
     });
 
     group('createVariant', () {
-      test('throws UnimplementedError (stub)', () {
+      test('Minnesota Whist creates variant successfully', () {
+        final variant = VariantType.minnesotaWhist.createVariant();
+        expect(variant, isNotNull);
+        expect(variant.name, equals('Minnesota Whist'));
+      });
+
+      test('unimplemented variants throw UnimplementedError', () {
         expect(
-          () => VariantType.minnesotaWhist.createVariant(),
+          () => VariantType.classicWhist.createVariant(),
+          throwsUnimplementedError,
+        );
+        expect(
+          () => VariantType.bidWhist.createVariant(),
+          throwsUnimplementedError,
+        );
+        expect(
+          () => VariantType.ohHell.createVariant(),
+          throwsUnimplementedError,
+        );
+        expect(
+          () => VariantType.widowWhist.createVariant(),
           throwsUnimplementedError,
         );
       });
 
-      test('all variants throw UnimplementedError for now', () {
-        for (final variant in VariantType.values) {
-          expect(
-            () => variant.createVariant(),
-            throwsUnimplementedError,
-            reason: '${variant.displayName} should throw until implemented',
-          );
-        }
+      test('Minnesota Whist variant has bidding engine', () {
+        final variant = VariantType.minnesotaWhist.createVariant();
+        expect(variant.usesBidding, isTrue);
+
+        final biddingEngine = variant.createBiddingEngine(Position.west);
+        expect(biddingEngine, isNotNull);
       });
 
-      test('error message indicates variants not yet created', () {
-        try {
-          VariantType.minnesotaWhist.createVariant();
-          fail('Should have thrown UnimplementedError');
-        } catch (e) {
-          expect(e, isA<UnimplementedError>());
-          final error = e as UnimplementedError;
-          expect(error.message, contains('not yet created'));
-        }
+      test('Minnesota Whist variant has scoring engine', () {
+        final variant = VariantType.minnesotaWhist.createVariant();
+
+        final scoringEngine = variant.createScoringEngine();
+        expect(scoringEngine, isNotNull);
+      });
+
+      test('Minnesota Whist variant has correct properties', () {
+        final variant = VariantType.minnesotaWhist.createVariant();
+
+        expect(variant.trumpSelectionMethod, equals(TrumpSelectionMethod.none));
+        expect(variant.hasSpecialCards, isFalse);
+        expect(variant.tricksPerHand, equals(13));
+        expect(variant.winningScore, equals(13));
       });
     });
 
