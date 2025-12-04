@@ -278,7 +278,7 @@ class FiveHundredIcon extends StatelessWidget {
   }
 }
 
-/// Painter for five hundred board hole pattern
+/// Painter for Minnesota Whist board hole pattern
 class FiveHundredBoardPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

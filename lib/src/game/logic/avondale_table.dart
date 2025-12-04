@@ -1,9 +1,9 @@
 import '../models/game_models.dart';
 
-/// The Avondale Scoring Table for 500
+/// The Avondale Scoring Table
 ///
-/// This is the official scoring table used in the game of 500, introduced
-/// by the US Playing Card Company in 1906 to remove bidding irregularities.
+/// This is a scoring table historically used in trick-taking card games,
+/// introduced by the US Playing Card Company in 1906 to standardize bidding.
 ///
 /// The table shows the point value for each possible bid (6-10 tricks in
 /// each suit and no-trump). The suit order from lowest to highest is:

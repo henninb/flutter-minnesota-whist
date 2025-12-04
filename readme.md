@@ -1,9 +1,8 @@
-# Five Hundred (Flutter)
+# Minnesota Whist (Flutter)
 
-A full five hundred experience rebuilt in Flutter. The new implementation keeps the
-original gameplay loop—cut for dealer, deal, crib selection, pegging, and hand
-counting—while running with a single Dart codebase that is ready for Android,
-iOS, web, and desktop targets.
+A full Minnesota Whist experience built in Flutter. The implementation provides
+classic trick-taking card game mechanics—deal, bidding, and play—while running
+with a single Dart codebase that is ready for Android, iOS, web, and desktop targets.
 
 ## Highlights
 

@@ -46,8 +46,8 @@ android {
             val keystoreFile = file(keystorePath)
 
             // Get passwords from environment (optional - won't fail if not set)
-            val keystorePassword = System.getenv("MINNESOTA_WHIST_KEYSTORE_PASSWORD")
-            val keyPassword = System.getenv("MINNESOTA_WHIST_KEY_PASSWORD")
+            val keystorePassword = System.getenv("MINNESOTAWHIST_KEYSTORE_PASSWORD")
+            val keyPassword = System.getenv("MINNESOTAWHIST_KEY_PASSWORD")
 
             if (keystoreFile.exists() && keystorePassword != null && keyPassword != null) {
                 storeFile = keystoreFile
@@ -64,7 +64,7 @@ android {
                     println("Warning: Release keystore not found at $keystorePath")
                 }
                 if (keystorePassword == null || keyPassword == null) {
-                    println("Warning: MINNESOTA_WHIST_KEYSTORE_PASSWORD or MINNESOTA_WHIST_KEY_PASSWORD not set")
+                    println("Warning: MINNESOTAWHIST_KEYSTORE_PASSWORD or MINNESOTAWHIST_KEY_PASSWORD not set")
                 }
                 println("Release builds will be unsigned. Debug builds will work normally.")
             }
