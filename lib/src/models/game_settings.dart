@@ -1,4 +1,5 @@
 import 'theme_models.dart';
+import '../game/variants/variant_type.dart';
 
 /// Card selection method
 enum CardSelectionMode {
@@ -18,11 +19,13 @@ class GameSettings {
   final CardSelectionMode cardSelectionMode;
   final CountingMode countingMode;
   final ThemeType? selectedTheme; // null means use date-based theme
+  final VariantType selectedVariant; // Whist variant to play
 
   const GameSettings({
     this.cardSelectionMode = CardSelectionMode.tap,
     this.countingMode = CountingMode.automatic,
     this.selectedTheme, // null by default for date-based theme
+    this.selectedVariant = VariantType.minnesotaWhist, // Default variant
   });
 
   /// Copy with method for immutable updates
@@ -30,12 +33,14 @@ class GameSettings {
     CardSelectionMode? cardSelectionMode,
     CountingMode? countingMode,
     ThemeType? selectedTheme,
+    VariantType? selectedVariant,
     bool clearSelectedTheme = false,
   }) {
     return GameSettings(
       cardSelectionMode: cardSelectionMode ?? this.cardSelectionMode,
       countingMode: countingMode ?? this.countingMode,
       selectedTheme: clearSelectedTheme ? null : (selectedTheme ?? this.selectedTheme),
+      selectedVariant: selectedVariant ?? this.selectedVariant,
     );
   }
 
@@ -45,6 +50,7 @@ class GameSettings {
       'cardSelectionMode': cardSelectionMode.name,
       'countingMode': countingMode.name,
       'selectedTheme': selectedTheme?.name,
+      'selectedVariant': selectedVariant.name,
     };
   }
 
@@ -65,6 +71,12 @@ class GameSettings {
               orElse: () => ThemeType.spring,
             )
           : null,
+      selectedVariant: json['selectedVariant'] != null
+          ? VariantType.values.firstWhere(
+              (e) => e.name == json['selectedVariant'],
+              orElse: () => VariantType.minnesotaWhist,
+            )
+          : VariantType.minnesotaWhist,
     );
   }
 
@@ -74,9 +86,10 @@ class GameSettings {
     return other is GameSettings &&
         other.cardSelectionMode == cardSelectionMode &&
         other.countingMode == countingMode &&
-        other.selectedTheme == selectedTheme;
+        other.selectedTheme == selectedTheme &&
+        other.selectedVariant == selectedVariant;
   }
 
   @override
-  int get hashCode => Object.hash(cardSelectionMode, countingMode, selectedTheme);
+  int get hashCode => Object.hash(cardSelectionMode, countingMode, selectedTheme, selectedVariant);
 }

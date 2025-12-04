@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../models/card.dart';
 import '../models/game_models.dart';
 import '../logic/minnesota_whist_scorer.dart';
+import '../variants/variant_type.dart';
+import '../variants/game_variant.dart';
 
 /// Game phases for Minnesota Whist
 enum GamePhase {
@@ -24,6 +26,8 @@ class GameState {
     this.currentPhase = GamePhase.setup,
     this.dealer = Position.west, // Default dealer (player is South, dealer rotates)
     this.handNumber = 0,
+    // Variant
+    this.variantType = VariantType.minnesotaWhist,
     // Cut for deal
     this.cutDeck = const [],
     this.cutCards = const {},
@@ -71,6 +75,11 @@ class GameState {
     this.aiThinkingPosition, // Which AI is currently "thinking"
     this.pendingBidCard, // Card selected for bidding (before reveal)
     this.canPlayerClaimRemainingTricks = false,
+    // Variant UI fields
+    this.specialCards,
+    this.specialCardsLabel,
+    this.specialCardsRevealed,
+    this.trumpRevealed,
   });
 
   // Game setup
@@ -78,6 +87,13 @@ class GameState {
   final GamePhase currentPhase;
   final Position dealer;
   final int handNumber;
+
+  // Variant
+  final VariantType variantType;
+
+  /// Get the active game variant instance
+  /// NOTE: This will throw UnimplementedError until variant classes are created
+  GameVariant get variant => variantType.createVariant();
 
   // Cut for deal
   final List<PlayingCard> cutDeck; // Spread deck shown to player for cutting
@@ -133,6 +149,12 @@ class GameState {
   final PlayingCard? pendingBidCard; // Card selected for bidding (before reveal)
   final bool canPlayerClaimRemainingTricks; // True if player can guarantee winning all remaining tricks
 
+  // Variant UI fields
+  final List<PlayingCard>? specialCards; // Kitty, widow, etc.
+  final String? specialCardsLabel; // "Kitty", "Widow"
+  final bool? specialCardsRevealed;
+  final bool? trumpRevealed;
+
   /// Get hand for a specific position
   List<PlayingCard> getHand(Position position) {
     switch (position) {
@@ -186,6 +208,7 @@ class GameState {
     GamePhase? currentPhase,
     Position? dealer,
     int? handNumber,
+    VariantType? variantType,
     List<PlayingCard>? cutDeck,
     Map<Position, PlayingCard>? cutCards,
     bool? playerHasSelectedCutCard,
@@ -226,6 +249,11 @@ class GameState {
     Position? aiThinkingPosition,
     PlayingCard? pendingBidCard,
     bool? canPlayerClaimRemainingTricks,
+    // Variant UI fields
+    List<PlayingCard>? specialCards,
+    String? specialCardsLabel,
+    bool? specialCardsRevealed,
+    bool? trumpRevealed,
     // Special handling for nullable fields
     bool clearCurrentBidder = false,
     bool clearCurrentHighBid = false,
@@ -241,12 +269,14 @@ class GameState {
     bool clearAiThinkingPosition = false,
     bool clearPendingBidCard = false,
     bool clearHandType = false,
+    bool clearSpecialCards = false,
   }) {
     return GameState(
       gameStarted: gameStarted ?? this.gameStarted,
       currentPhase: currentPhase ?? this.currentPhase,
       dealer: dealer ?? this.dealer,
       handNumber: handNumber ?? this.handNumber,
+      variantType: variantType ?? this.variantType,
       cutDeck: cutDeck ?? this.cutDeck,
       cutCards: cutCards ?? this.cutCards,
       playerHasSelectedCutCard: playerHasSelectedCutCard ?? this.playerHasSelectedCutCard,
@@ -287,6 +317,10 @@ class GameState {
       aiThinkingPosition: clearAiThinkingPosition ? null : (aiThinkingPosition ?? this.aiThinkingPosition),
       pendingBidCard: clearPendingBidCard ? null : (pendingBidCard ?? this.pendingBidCard),
       canPlayerClaimRemainingTricks: canPlayerClaimRemainingTricks ?? this.canPlayerClaimRemainingTricks,
+      specialCards: clearSpecialCards ? null : (specialCards ?? this.specialCards),
+      specialCardsLabel: specialCardsLabel ?? this.specialCardsLabel,
+      specialCardsRevealed: specialCardsRevealed ?? this.specialCardsRevealed,
+      trumpRevealed: trumpRevealed ?? this.trumpRevealed,
     );
   }
 }
