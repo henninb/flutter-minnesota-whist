@@ -25,7 +25,9 @@ class SetupScreen extends StatelessWidget {
     }
 
     // Show ready to start message (including after cut is complete)
-    return _ReadyToStartDisplay(state: state);
+    return _ReadyToStartDisplay(
+      state: state,
+    );
   }
 }
 
@@ -33,12 +35,14 @@ class SetupScreen extends StatelessWidget {
 class _ReadyToStartDisplay extends StatelessWidget {
   final GameState state;
 
-  const _ReadyToStartDisplay({required this.state});
+  const _ReadyToStartDisplay({
+    required this.state,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

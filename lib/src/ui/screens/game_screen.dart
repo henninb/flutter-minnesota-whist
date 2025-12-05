@@ -105,6 +105,12 @@ class _GameScreenState extends State<GameScreen> {
               if (!state.gameStarted)
                 WelcomeOverlay(
                   onStartGame: () => widget.engine.startNewGame(),
+                  selectedVariant: widget.currentSettings.selectedVariant,
+                  onVariantSelected: (variant) {
+                    widget.onSettingsChange(
+                      widget.currentSettings.copyWith(selectedVariant: variant),
+                    );
+                  },
                 ),
 
               // Game over modal

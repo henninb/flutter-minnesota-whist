@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import '../../../game/variants/variant_type.dart';
+import '../variant_selector.dart';
 
 /// Full-screen welcome overlay shown on app launch.
 ///
-/// Displays the game title, icon, welcome message, and "Start New Game" button
-/// over a semi-transparent background. The overlay fades in on appearance and
-/// fades out when the user starts a new game.
+/// Displays the game title, icon, welcome message, variant selector,
+/// and "Start New Game" button over a semi-transparent background.
+/// The overlay fades in on appearance and fades out when the user starts a new game.
 class WelcomeOverlay extends StatelessWidget {
   const WelcomeOverlay({
     super.key,
     required this.onStartGame,
+    this.selectedVariant,
+    this.onVariantSelected,
   });
 
   final VoidCallback onStartGame;
+  final VariantType? selectedVariant;
+  final Function(VariantType)? onVariantSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +119,7 @@ class WelcomeOverlay extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Play Minnesota Whist in a four-player partnership game. '
+                          'Play whist variants in a four-player partnership game. '
                           'Bid high or low with a card, play strategically, and be '
                           'the first team to reach 13 points!',
                           style: Theme.of(context).textTheme.bodyLarge,
@@ -137,6 +143,18 @@ class WelcomeOverlay extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // Variant selector
+                if (selectedVariant != null && onVariantSelected != null) ...[
+                  const SizedBox(height: 24),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 500),
+                    child: VariantSelector(
+                      selectedVariant: selectedVariant!,
+                      onVariantSelected: onVariantSelected!,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
