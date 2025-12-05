@@ -72,7 +72,8 @@ class _VariantSelectorState extends State<VariantSelector> {
           // Variant cards
           ...VariantType.values.map((variant) {
             final isSelected = _selectedVariant == variant;
-            final isImplemented = variant == VariantType.minnesotaWhist;
+            final isImplemented = variant == VariantType.minnesotaWhist ||
+                                  variant == VariantType.classicWhist;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),

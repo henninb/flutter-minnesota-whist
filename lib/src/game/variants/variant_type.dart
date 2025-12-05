@@ -1,5 +1,6 @@
 import 'game_variant.dart';
 import 'minnesota_whist_variant.dart';
+import 'classic_whist_variant.dart';
 
 /// Enumeration of all supported whist variants
 enum VariantType {
@@ -49,7 +50,7 @@ extension VariantTypeExtension on VariantType {
       case VariantType.minnesotaWhist:
         return const MinnesotaWhistVariant();
       case VariantType.classicWhist:
-        throw UnimplementedError('Classic Whist variant not yet implemented');
+        return const ClassicWhistVariant();
       case VariantType.bidWhist:
         throw UnimplementedError('Bid Whist variant not yet implemented');
       case VariantType.ohHell:

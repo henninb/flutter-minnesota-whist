@@ -10,8 +10,11 @@ import '../logic/bidding_ai.dart';
 import '../logic/trick_engine.dart';
 import '../logic/play_ai.dart';
 import '../logic/trump_rules.dart';
-import '../logic/minnesota_whist_scorer.dart';
+import '../logic/minnesota_whist_scorer.dart' hide GameOverStatus;
 import '../logic/claim_analyzer.dart';
+import '../logic/scoring_engine.dart';
+import '../variants/variant_type.dart';
+import '../variants/game_variant.dart';
 import '../../services/game_persistence.dart';
 import 'game_state.dart';
 
@@ -72,15 +75,19 @@ class GameEngine extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Start a new game
-  void startNewGame() {
+  /// Start a new game with the specified variant
+  void startNewGame({VariantType? variant}) {
+    final selectedVariant = variant ?? VariantType.minnesotaWhist;
+    _debugLog('🎮 [GameEngine] Starting new game with variant: $selectedVariant');
     _updateState(
-      const GameState(
+      GameState(
         gameStarted: true,
         currentPhase: GamePhase.setup,
         gameStatus: 'Tap Cut for Deal to determine dealer',
+        variantType: selectedVariant,
       ),
     );
+    _debugLog('🎮 [GameEngine] GameState variantType after update: ${_state.variantType}');
     // Immediately show the cut for deal deck
     cutForDeal();
   }
@@ -197,7 +204,17 @@ class GameEngine extends ChangeNotifier {
 
     _debugLog('⏱️ [TIMING] About to update state with dealt cards...');
 
-    // Update state with dealt cards and go directly to bidding
+    // Determine trump suit for variants that use last card method
+    Suit? trumpSuit;
+    if (_state.variant.trumpSelectionMethod == TrumpSelectionMethod.lastCard) {
+      // Last card dealt to the dealer determines trump
+      final dealerHand = dealResult.hands[_state.dealer]!;
+      final lastCard = dealerHand.last;
+      trumpSuit = lastCard.suit;
+      _debugLog('🎮 [TRUMP] Last card dealt: $lastCard, trump suit: $trumpSuit');
+    }
+
+    // Update state with dealt cards
     _updateState(
       _state.copyWith(
         playerHand: sortedPlayerHand,
@@ -206,15 +223,26 @@ class GameEngine extends ChangeNotifier {
         opponentWestHand: dealResult.hands[Position.west],
         handNumber: _state.handNumber + 1,
         cutCards: {}, // Clear cut cards after dealing
+        trumpSuit: trumpSuit, // Set trump for Classic Whist
       ),
     );
 
-    _debugLog('⏱️ [TIMING] State updated, calling _startBidding()...');
+    _debugLog('⏱️ [TIMING] State updated, checking if variant uses bidding...');
+    _debugLog('🎮 [VARIANT CHECK] Current variant: ${_state.variant.name}');
+    _debugLog('🎮 [VARIANT CHECK] Uses bidding: ${_state.variant.usesBidding}');
+    _debugLog('🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}');
 
-    // Start bidding immediately (will set phase to bidding)
-    _startBidding();
-
-    _debugLog('⏱️ [TIMING] _startBidding() completed');
+    // Check if the variant uses bidding
+    if (_state.variant.usesBidding) {
+      _debugLog('⏱️ [TIMING] Variant uses bidding, calling _startBidding()...');
+      // Start bidding immediately (will set phase to bidding)
+      _startBidding();
+      _debugLog('⏱️ [TIMING] _startBidding() completed');
+    } else {
+      _debugLog('⏱️ [TIMING] Variant does not use bidding, starting play phase...');
+      // Skip bidding and go straight to play
+      _startPlayWithoutBidding();
+    }
   }
 
   // ============================================================================
@@ -487,6 +515,43 @@ class GameEngine extends ChangeNotifier {
   // ============================================================================
   // PLAY PHASE
   // ============================================================================
+
+  /// Start play phase without bidding (for variants like Classic Whist)
+  void _startPlayWithoutBidding() {
+    // For Classic Whist: Trump determined by last card dealt (if applicable)
+    // Leader is player to dealer's left
+    final leader = _state.dealer.next;
+
+    _debugLog('\n========== START PLAY PHASE (No Bidding) ==========');
+    _debugLog('Variant: ${_state.variant.name}');
+    _debugLog('Leader: ${_state.getName(leader)} (${leader.name}) [dealer\'s left]');
+    _debugLog('Trump: ${_state.trumpSuit ?? "None"}');
+
+    // Sort player's hand by suit
+    final sortedPlayerHand = sortHandBySuit(_state.playerHand);
+
+    _updateState(
+      _state.copyWith(
+        currentPhase: GamePhase.play,
+        isPlayPhase: true,
+        playerHand: sortedPlayerHand,
+        currentTrick: Trick(plays: [], leader: leader, trumpSuit: _state.trumpSuit),
+        completedTricks: [],
+        tricksWonNS: 0,
+        tricksWonEW: 0,
+        currentPlayer: leader,
+        gameStatus: '${_state.getName(leader)} leads',
+        clearSelectedCardIndices: true,
+      ),
+    );
+
+    _debugLog('========================================\n');
+
+    // If AI leads, schedule AI play
+    if (leader != Position.south) {
+      _scheduleAIPlay();
+    }
+  }
 
   void _startPlay() {
     // Minnesota Whist: No trump in standard version
@@ -1244,16 +1309,34 @@ class GameEngine extends ChangeNotifier {
   // ============================================================================
 
   void _scoreHand() {
-    if (_state.contractor == null || _state.handType == null) return;
+    _debugLog('\n========== SCORING HAND ==========');
+    _debugLog('🎮 [VARIANT CHECK] Current variant: ${_state.variant.name}');
+    _debugLog('🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}');
 
-    final grandingTeam = _state.contractor!.team;
-    final tricksWonByGrandingTeam = _state.getTricksWon(grandingTeam);
+    // Get the scoring engine from the current variant
+    final scoringEngine = _state.variant.createScoringEngine();
+    _debugLog('🎮 [SCORING] Using scoring engine: ${scoringEngine.runtimeType}');
 
-    final handScore = MinnesotaWhistScorer.scoreHand(
-      handType: _state.handType!,
-      grandingTeam: grandingTeam,
-      tricksWonByGrandingTeam: tricksWonByGrandingTeam,
-      allBidLow: _state.allBidLow,
+    // For variants with bidding (like Minnesota Whist)
+    final grandingTeam = _state.contractor?.team;
+    final tricksWonByGrandingTeam = grandingTeam != null
+        ? _state.getTricksWon(grandingTeam)
+        : null;
+
+    // Get tricks for both teams (needed for variants without contractors)
+    final nsTeamTricks = _state.getTricksWon(Team.northSouth);
+    final ewTeamTricks = _state.getTricksWon(Team.eastWest);
+    _debugLog('🎮 [SCORING] NS tricks: $nsTeamTricks, EW tricks: $ewTeamTricks');
+
+    final handScore = scoringEngine.scoreHand(
+      handType: _state.handType,
+      contractingTeam: grandingTeam,
+      tricksWonByContractingTeam: tricksWonByGrandingTeam,
+      additionalParams: {
+        'allBidLow': _state.allBidLow,
+        'northSouthTricks': nsTeamTricks,
+        'eastWestTricks': ewTeamTricks,
+      },
     );
 
     // Apply scores
@@ -1305,16 +1388,17 @@ class GameEngine extends ChangeNotifier {
       });
     }
 
-    // Check game over
-    final gameOverStatus = MinnesotaWhistScorer.checkGameOver(
+    // Check game over using variant's scoring engine
+    final gameOverStatus = scoringEngine.checkGameOver(
       teamNSScore: newScoreNS,
       teamEWScore: newScoreEW,
+      winningScore: _state.variant.winningScore,
     );
 
     if (gameOverStatus != null) {
       // Delay before showing game over to let user see final trick and score
       Future.delayed(const Duration(milliseconds: 3000), () {
-        _handleGameOver(gameOverStatus, newScoreNS, newScoreEW);
+        _handleGameOver(scoringEngine, gameOverStatus, newScoreNS, newScoreEW);
       });
     }
     // Otherwise, stay in scoring phase - user must click "Next Hand" to continue
@@ -1351,13 +1435,14 @@ class GameEngine extends ChangeNotifier {
   }
 
   void _handleGameOver(
+    ScoringEngine scoringEngine,
     GameOverStatus status,
     int finalScoreNS,
     int finalScoreEW,
   ) {
     final winningTeam = status == GameOverStatus.teamNSWins
         ? Team.northSouth
-        : Team.eastWest;
+        : (status == GameOverStatus.teamEWWins ? Team.eastWest : null);
 
     final playerWon = winningTeam == Team.northSouth;
 
@@ -1366,7 +1451,7 @@ class GameEngine extends ChangeNotifier {
         currentPhase: GamePhase.gameOver,
         showGameOverDialog: true,
         gameOverData: GameOverData(
-          winningTeam: winningTeam,
+          winningTeam: winningTeam ?? Team.northSouth, // Fallback for draw
           finalScoreNS: finalScoreNS,
           finalScoreEW: finalScoreEW,
           status: status,
@@ -1375,7 +1460,7 @@ class GameEngine extends ChangeNotifier {
         ),
         gamesWon: playerWon ? _state.gamesWon + 1 : _state.gamesWon,
         gamesLost: playerWon ? _state.gamesLost : _state.gamesLost + 1,
-        gameStatus: MinnesotaWhistScorer.getGameOverMessage(
+        gameStatus: scoringEngine.getGameOverMessage(
           status,
           finalScoreNS,
           finalScoreEW,

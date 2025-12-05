@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/card.dart';
 import '../models/game_models.dart';
-import '../logic/minnesota_whist_scorer.dart';
+import '../logic/scoring_engine.dart';
 import '../variants/variant_type.dart';
 import '../variants/game_variant.dart';
 

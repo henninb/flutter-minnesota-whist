@@ -47,6 +47,7 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🎮 [GameScreen.build] Current settings variant: ${widget.currentSettings.selectedVariant}');
     return AnimatedBuilder(
       animation: widget.engine,
       builder: (context, _) {
@@ -79,7 +80,7 @@ class _GameScreenState extends State<GameScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Minnesota Whist'),
+            title: Text(state.variant.name),
             actions: [
               IconButton(
                 icon: const Icon(Icons.settings),
@@ -93,7 +94,9 @@ class _GameScreenState extends State<GameScreen> {
               PersistentGameBoard(
                 state: state,
                 engine: widget.engine,
-                onStartGame: () => widget.engine.startNewGame(),
+                onStartGame: () => widget.engine.startNewGame(
+                  variant: widget.currentSettings.selectedVariant,
+                ),
                 onCutForDeal: () => widget.engine.cutForDeal(),
                 onSelectCutCard: (index) => widget.engine.selectCutCard(index),
                 onDealCards: () => widget.engine.dealCards(),
@@ -104,9 +107,15 @@ class _GameScreenState extends State<GameScreen> {
               // Welcome overlay (when game not started)
               if (!state.gameStarted)
                 WelcomeOverlay(
-                  onStartGame: () => widget.engine.startNewGame(),
+                  onStartGame: () {
+                    debugPrint('🎮 [GameScreen] Starting game with variant: ${widget.currentSettings.selectedVariant}');
+                    widget.engine.startNewGame(
+                      variant: widget.currentSettings.selectedVariant,
+                    );
+                  },
                   selectedVariant: widget.currentSettings.selectedVariant,
                   onVariantSelected: (variant) {
+                    debugPrint('🎮 [GameScreen] Variant selected: $variant');
                     widget.onSettingsChange(
                       widget.currentSettings.copyWith(selectedVariant: variant),
                     );

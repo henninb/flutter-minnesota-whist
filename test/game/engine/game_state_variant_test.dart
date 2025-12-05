@@ -23,11 +23,12 @@ void main() {
     });
 
     test('variant property returns correct variant for other types', () {
-      // Only Minnesota Whist is implemented, others should throw
-      expect(
-        () => GameState(variantType: VariantType.classicWhist).variant,
-        throwsUnimplementedError,
-      );
+      // Classic Whist is now implemented
+      final classicState = GameState(variantType: VariantType.classicWhist);
+      expect(classicState.variant.name, equals('Classic Whist'));
+      expect(classicState.variant.usesBidding, isFalse);
+
+      // Other variants still throw
       expect(
         () => GameState(variantType: VariantType.bidWhist).variant,
         throwsUnimplementedError,

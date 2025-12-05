@@ -40,7 +40,7 @@ class WelcomeOverlay extends StatelessWidget {
               children: [
                 // App title
                 Text(
-                  'Minnesota Whist',
+                  'Whist',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -49,7 +49,7 @@ class WelcomeOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Classic Partnership Card Game',
+                  'Classic Partnership Card Games',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -119,25 +119,9 @@ class WelcomeOverlay extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Play whist variants in a four-player partnership game. '
-                          'Bid high or low with a card, play strategically, and be '
-                          'the first team to reach 13 points!',
+                          'Choose your game variant and start playing!',
                           style: Theme.of(context).textTheme.bodyLarge,
                           textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Start button
-                        FilledButton.icon(
-                          onPressed: onStartGame,
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Start New Game'),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                          ),
                         ),
                       ],
                     ),
@@ -152,6 +136,20 @@ class WelcomeOverlay extends StatelessWidget {
                     child: VariantSelector(
                       selectedVariant: selectedVariant!,
                       onVariantSelected: onVariantSelected!,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Start button (below variant selector)
+                  FilledButton.icon(
+                    onPressed: onStartGame,
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Start New Game'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                 ],

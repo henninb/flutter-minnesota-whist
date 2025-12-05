@@ -25,6 +25,7 @@ class SettingsRepository {
 
       if (kDebugMode) {
         debugPrint('[SettingsRepository] Settings loaded successfully');
+        debugPrint('[SettingsRepository] Loaded variant: ${settings.selectedVariant}');
       }
 
       return settings;
@@ -54,6 +55,8 @@ class SettingsRepository {
 
       if (kDebugMode) {
         debugPrint('[SettingsRepository] Settings saved successfully');
+        debugPrint('[SettingsRepository] Saved variant: ${settings.selectedVariant}');
+        debugPrint('[SettingsRepository] JSON: $jsonString');
       }
     } on FormatException catch (e) {
       if (kDebugMode) {

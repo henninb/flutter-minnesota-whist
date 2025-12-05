@@ -210,9 +210,9 @@ class ScoreDisplay extends StatelessWidget {
               ),
             ),
           ],
-          // Spacing between dealer and bid
-          if (dealer != null && winningBid != null) const SizedBox(height: 12),
-          // Bid info
+          // Spacing between dealer and bid/trump
+          if (dealer != null && (winningBid != null || trumpSuit != null)) const SizedBox(height: 12),
+          // Bid info (Minnesota Whist)
           if (winningBid != null) ...[
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -271,6 +271,61 @@ class ScoreDisplay extends StatelessWidget {
               ),
             ),
           ],
+          // Trump suit info (Classic Whist and other variants with trump)
+          if (winningBid == null && trumpSuit != null) ...[
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Trump',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _getTrumpColor(context, trumpSuit!),
+                    _getTrumpColor(context, trumpSuit!).withValues(alpha: 0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _getTrumpColor(context, trumpSuit!).withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getTrumpColor(context, trumpSuit!).withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                _suitSymbol(trumpSuit!),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -291,5 +346,31 @@ class ScoreDisplay extends StatelessWidget {
 
   String _bidLabel(Bid bid) {
     return bid.bidType == BidType.high ? 'HIGH' : 'LOW';
+  }
+
+  String _suitSymbol(Suit suit) {
+    switch (suit) {
+      case Suit.spades:
+        return '♠';
+      case Suit.hearts:
+        return '♥';
+      case Suit.diamonds:
+        return '♦';
+      case Suit.clubs:
+        return '♣';
+    }
+  }
+
+  Color _getTrumpColor(BuildContext context, Suit suit) {
+    switch (suit) {
+      case Suit.spades:
+        return const Color(0xFF1A1A2E);
+      case Suit.hearts:
+        return const Color(0xFFDC143C);
+      case Suit.diamonds:
+        return const Color(0xFFFF6B35);
+      case Suit.clubs:
+        return const Color(0xFF0F4C3A);
+    }
   }
 }
