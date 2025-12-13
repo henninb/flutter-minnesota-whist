@@ -371,7 +371,6 @@ class ClassicWhistScoringEngine implements ScoringEngine {
     return score.description;
   }
 
-  @override
   String explainScoring() {
     return '''
 Classic Whist uses the "book" scoring system:

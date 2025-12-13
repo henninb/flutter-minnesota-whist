@@ -46,7 +46,6 @@ class BidWhistVariant implements GameVariant {
     return BidWhistBiddingEngine(dealer: dealer);
   }
 
-  @override
   String get biddingRules => '''
 **Bidding Rules:**
 - Bidding proceeds clockwise from dealer's left
@@ -76,7 +75,6 @@ class BidWhistVariant implements GameVariant {
   @override
   int get winningScore => 7;
 
-  @override
   String get scoringRules => '''
 **Scoring Rules:**
 - Making bid: Points equal to bid level (3-7)
@@ -102,7 +100,6 @@ class BidWhistVariant implements GameVariant {
   bool get allowsClaimingTricks => false;
 
   // Documentation
-  @override
   String get quickReference => '''
 **Bid Whist Quick Reference**
 
@@ -121,7 +118,6 @@ class BidWhistVariant implements GameVariant {
 **Win:** First to 7 points (or opponent reaches -7)
 ''';
 
-  @override
   String get fullRules => '''
 # Bid Whist
 
@@ -355,7 +351,6 @@ class BidWhistScoringEngine implements ScoringEngine {
     }
   }
 
-  @override
   String getScoringExplanation() {
     return '''
 **Bid Whist Scoring System**

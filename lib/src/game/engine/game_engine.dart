@@ -6,7 +6,7 @@ import '../models/card.dart';
 import '../models/game_models.dart';
 import '../logic/deal_utils.dart';
 import '../logic/bidding_engine.dart';
-import '../logic/minnesota_whist_bidding_engine.dart' hide AuctionStatus;
+import '../logic/minnesota_whist_bidding_engine.dart' as mn_whist;
 import '../logic/bid_whist_bidding_engine.dart';
 import '../variants/widow_whist_variant.dart';
 import '../logic/bidding_ai.dart';
@@ -544,7 +544,8 @@ class GameEngine extends ChangeNotifier {
 
   /// Player submits a bid card (Minnesota Whist)
   void submitPlayerBidCard(PlayingCard bidCard) {
-    final biddingEngine = MinnesotaWhistBiddingEngine(dealer: _state.dealer);
+    final biddingEngine =
+        mn_whist.MinnesotaWhistBiddingEngine(dealer: _state.dealer);
 
     // Validate bid card
     final validation = biddingEngine.validateBidCard(
@@ -593,7 +594,8 @@ class GameEngine extends ChangeNotifier {
   void _collectAIBids() {
     _debugLog('\n[AI BIDDING] Collecting AI bid cards...');
 
-    final biddingEngine = MinnesotaWhistBiddingEngine(dealer: _state.dealer);
+    final biddingEngine =
+        mn_whist.MinnesotaWhistBiddingEngine(dealer: _state.dealer);
 
     // AI players place their bid cards
     for (final position in [Position.north, Position.east, Position.west]) {
@@ -635,7 +637,8 @@ class GameEngine extends ChangeNotifier {
   }
 
   void _checkAuctionComplete() {
-    final biddingEngine = MinnesotaWhistBiddingEngine(dealer: _state.dealer);
+    final biddingEngine =
+        mn_whist.MinnesotaWhistBiddingEngine(dealer: _state.dealer);
 
     if (!biddingEngine.isComplete(_state.bidHistory)) {
       _debugLog(
@@ -649,7 +652,7 @@ class GameEngine extends ChangeNotifier {
 
     _debugLog('[AUCTION] Complete - determining winner');
 
-    if (result.status == AuctionStatus.won) {
+    if (result.status == mn_whist.AuctionStatus.won) {
       _updateState(
         _state.copyWith(
           isBiddingPhase: false,

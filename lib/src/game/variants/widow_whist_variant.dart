@@ -43,7 +43,6 @@ class WidowWhistVariant implements GameVariant {
     return WidowWhistBiddingEngine(dealer: dealer);
   }
 
-  @override
   String get biddingRules => '''
 **Bidding Rules:**
 - All players bid simultaneously for the widow
@@ -72,7 +71,6 @@ class WidowWhistVariant implements GameVariant {
   @override
   int get winningScore => 50; // First to 50 points
 
-  @override
   String get scoringRules => '''
 **Scoring Rules:**
 - Make bid: +1 point per trick over 6
@@ -96,7 +94,6 @@ class WidowWhistVariant implements GameVariant {
   bool get allowsClaimingTricks => false;
 
   // Documentation
-  @override
   String get quickReference => '''
 **Widow Whist Quick Reference**
 
@@ -115,7 +112,6 @@ class WidowWhistVariant implements GameVariant {
 **Win:** First to 50 points
 ''';
 
-  @override
   String get fullRules => '''
 # Widow Whist
 
@@ -417,7 +413,6 @@ class WidowWhistScoringEngine implements ScoringEngine {
     }
   }
 
-  @override
   String getScoringExplanation() {
     return '''
 **Widow Whist Scoring System**

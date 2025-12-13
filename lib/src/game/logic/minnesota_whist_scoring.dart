@@ -96,7 +96,6 @@ class MinnesotaWhistScoring {
     required Team grandingTeam,
     required Map<Team, int> pointsScored,
   }) {
-    final tricksWonByOpponents = 13 - tricksWonByGrandingTeam;
     final opponentTeam =
         grandingTeam == Team.northSouth ? Team.eastWest : Team.northSouth;
 

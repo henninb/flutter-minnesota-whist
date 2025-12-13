@@ -270,7 +270,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // Get highest bid so far
     int? highestBid;
-    for (final entry in state.bidHistory) {
+    for (final _ in state.bidHistory) {
       // TODO: Extract book count from bid
       // For now, just track if there are any bids
     }

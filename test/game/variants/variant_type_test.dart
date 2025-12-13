@@ -138,23 +138,23 @@ void main() {
         expect(variant.name, equals('Minnesota Whist'));
       });
 
-      test('unimplemented variants throw UnimplementedError', () {
-        expect(
-          () => VariantType.classicWhist.createVariant(),
-          throwsUnimplementedError,
-        );
-        expect(
-          () => VariantType.bidWhist.createVariant(),
-          throwsUnimplementedError,
-        );
-        expect(
-          () => VariantType.ohHell.createVariant(),
-          throwsUnimplementedError,
-        );
-        expect(
-          () => VariantType.widowWhist.createVariant(),
-          throwsUnimplementedError,
-        );
+      test('all variants can be created successfully', () {
+        // All variants are now implemented
+        final classicWhist = VariantType.classicWhist.createVariant();
+        expect(classicWhist, isNotNull);
+        expect(classicWhist.name, equals('Classic Whist'));
+
+        final bidWhist = VariantType.bidWhist.createVariant();
+        expect(bidWhist, isNotNull);
+        expect(bidWhist.name, equals('Bid Whist'));
+
+        final ohHell = VariantType.ohHell.createVariant();
+        expect(ohHell, isNotNull);
+        expect(ohHell.name, equals('Oh Hell'));
+
+        final widowWhist = VariantType.widowWhist.createVariant();
+        expect(widowWhist, isNotNull);
+        expect(widowWhist.name, equals('Widow Whist'));
       });
 
       test('Minnesota Whist variant has bidding engine', () {

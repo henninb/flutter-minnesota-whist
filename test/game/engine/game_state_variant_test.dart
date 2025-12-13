@@ -23,16 +23,14 @@ void main() {
     });
 
     test('variant property returns correct variant for other types', () {
-      // Classic Whist is now implemented
+      // All variants are now implemented
       final classicState = GameState(variantType: VariantType.classicWhist);
       expect(classicState.variant.name, equals('Classic Whist'));
       expect(classicState.variant.usesBidding, isFalse);
 
-      // Other variants still throw
-      expect(
-        () => GameState(variantType: VariantType.bidWhist).variant,
-        throwsUnimplementedError,
-      );
+      final bidWhistState = GameState(variantType: VariantType.bidWhist);
+      expect(bidWhistState.variant.name, equals('Bid Whist'));
+      expect(bidWhistState.variant.usesBidding, isTrue);
     });
 
     test('copyWith preserves variant type by default', () {

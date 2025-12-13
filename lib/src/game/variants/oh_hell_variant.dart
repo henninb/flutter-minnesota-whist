@@ -44,7 +44,6 @@ class OhHellVariant implements GameVariant {
     return OhHellBiddingEngine(dealer: dealer);
   }
 
-  @override
   String get biddingRules => '''
 **Bidding Rules:**
 - Bidding proceeds clockwise from dealer's left
@@ -71,7 +70,6 @@ class OhHellVariant implements GameVariant {
   @override
   int get winningScore => 100; // First to 100 points
 
-  @override
   String get scoringRules => '''
 **Scoring Rules:**
 - Make bid exactly: 10 points + bid amount
@@ -95,7 +93,6 @@ class OhHellVariant implements GameVariant {
   bool get allowsClaimingTricks => false;
 
   // Documentation
-  @override
   String get quickReference => '''
 **Oh Hell Quick Reference**
 
@@ -114,7 +111,6 @@ class OhHellVariant implements GameVariant {
 **Win:** First to 100 points
 ''';
 
-  @override
   String get fullRules => '''
 # Oh Hell
 
@@ -411,7 +407,6 @@ class OhHellScoringEngine implements ScoringEngine {
     }
   }
 
-  @override
   String getScoringExplanation() {
     return '''
 **Oh Hell Scoring System**

@@ -6,14 +6,14 @@ import 'package:minnesota_whist/src/game/variants/variant_type.dart';
 void main() {
   group('VariantSelector', () {
     testWidgets('renders all 5 variants', (WidgetTester tester) async {
-      VariantType? selectedVariant;
-
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) => selectedVariant = variant,
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
@@ -35,9 +35,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) {},
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
@@ -51,30 +53,34 @@ void main() {
       expect(minnesotaCard, findsOneWidget);
     });
 
-    testWidgets('shows unimplemented variants as coming soon',
+    testWidgets('all variants are now implemented',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) {},
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
       );
 
-      // Should show "Coming Soon" badges (4 for unimplemented variants)
-      expect(find.text('Coming Soon'), findsNWidgets(4));
+      // All variants are implemented, no "Coming Soon" badges should appear
+      expect(find.text('Coming Soon'), findsNothing);
     });
 
     testWidgets('indicates selected variant', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) {},
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
@@ -91,9 +97,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) => selectedVariant = variant,
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) => selectedVariant = variant,
+              ),
             ),
           ),
         ),
@@ -107,27 +115,29 @@ void main() {
       expect(selectedVariant, equals(VariantType.minnesotaWhist));
     });
 
-    testWidgets('does not call onVariantSelected for unimplemented variants',
+    testWidgets('calls onVariantSelected for all implemented variants',
         (WidgetTester tester) async {
       VariantType? selectedVariant;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) => selectedVariant = variant,
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) => selectedVariant = variant,
+              ),
             ),
           ),
         ),
       );
 
-      // Try to tap on Classic Whist (unimplemented)
+      // Tap on Classic Whist (now implemented)
       await tester.tap(find.text('Classic Whist'));
       await tester.pumpAndSettle();
 
-      // Should not have changed the selection
-      expect(selectedVariant, isNull);
+      // Should have changed the selection
+      expect(selectedVariant, equals(VariantType.classicWhist));
     });
 
     testWidgets('shows info message about more variants coming',
@@ -135,9 +145,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) {},
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
@@ -152,9 +164,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: VariantSelector(
-              selectedVariant: VariantType.minnesotaWhist,
-              onVariantSelected: (variant) {},
+            body: SingleChildScrollView(
+              child: VariantSelector(
+                selectedVariant: VariantType.minnesotaWhist,
+                onVariantSelected: (variant) {},
+              ),
             ),
           ),
         ),
@@ -176,13 +190,15 @@ void main() {
           home: StatefulBuilder(
             builder: (context, setState) {
               return Scaffold(
-                body: VariantSelector(
-                  selectedVariant: currentVariant,
-                  onVariantSelected: (variant) {
-                    setState(() {
-                      currentVariant = variant;
-                    });
-                  },
+                body: SingleChildScrollView(
+                  child: VariantSelector(
+                    selectedVariant: currentVariant,
+                    onVariantSelected: (variant) {
+                      setState(() {
+                        currentVariant = variant;
+                      });
+                    },
+                  ),
                 ),
               );
             },
@@ -217,7 +233,8 @@ void main() {
 
       // Should have card-like appearance icons
       expect(find.byIcon(Icons.view_carousel), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_forward_ios), findsOneWidget);
+      // All 5 variants are implemented, so 5 arrow icons
+      expect(find.byIcon(Icons.arrow_forward_ios), findsNWidgets(5));
     });
   });
 }

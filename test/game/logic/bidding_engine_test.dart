@@ -7,8 +7,6 @@ import 'package:minnesota_whist/src/game/models/card.dart';
 class MockBiddingEngine extends BiddingEngine {
   MockBiddingEngine({required super.dealer});
 
-  final List<BidEntry> _bids = [];
-
   @override
   bool isComplete(List<BidEntry> bids) {
     // Simple mock: complete when all 4 players have bid
