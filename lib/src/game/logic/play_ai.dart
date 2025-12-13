@@ -41,7 +41,9 @@ class PlayAI {
     if (legalCards.length == 1) {
       final card = legalCards.first;
       if (kDebugMode) {
-        debugPrint('[AI PLAY] ${position.name}: ${card.label} (only legal card)');
+        debugPrint(
+          '[AI PLAY] ${position.name}: ${card.label} (only legal card)',
+        );
       }
       return card;
     }
@@ -54,7 +56,9 @@ class PlayAI {
         trumpRules: trumpRules,
       );
       if (kDebugMode) {
-        debugPrint('[AI PLAY] ${position.name}: LEADS ${card.label} (${legalCards.length} options)');
+        debugPrint(
+          '[AI PLAY] ${position.name}: LEADS ${card.label} (${legalCards.length} options)',
+        );
       }
       return card;
     }
@@ -69,7 +73,9 @@ class PlayAI {
       partner: partner,
     );
     if (kDebugMode) {
-      debugPrint('[AI PLAY] ${position.name}: ${card.label} (partner ${partnerIsWinning ? 'winning' : 'not winning'}, ${legalCards.length} options)');
+      debugPrint(
+        '[AI PLAY] ${position.name}: ${card.label} (partner ${partnerIsWinning ? 'winning' : 'not winning'}, ${legalCards.length} options)',
+      );
     }
     return card;
   }
@@ -106,7 +112,8 @@ class PlayAI {
       }
 
       // Lead highest card from longest suit
-      return trumpRules.getHighestCard(longestSuit.value) ?? longestSuit.value.first;
+      return trumpRules.getHighestCard(longestSuit.value) ??
+          longestSuit.value.first;
     }
 
     // All trumps - lead highest
@@ -137,7 +144,8 @@ class PlayAI {
 
     if (cardsWeCanWinWith.isNotEmpty) {
       // Win with lowest winning card
-      return trumpRules.getLowestCard(cardsWeCanWinWith) ?? cardsWeCanWinWith.first;
+      return trumpRules.getLowestCard(cardsWeCanWinWith) ??
+          cardsWeCanWinWith.first;
     }
 
     // Can't win - play lowest card
@@ -158,12 +166,14 @@ class PlayAI {
       // Trump beats non-trump
       if (trumpRules.isTrump(currentCard) && !trumpRules.isTrump(winningCard)) {
         winningCard = currentCard;
-      } else if (trumpRules.isTrump(currentCard) && trumpRules.isTrump(winningCard)) {
+      } else if (trumpRules.isTrump(currentCard) &&
+          trumpRules.isTrump(winningCard)) {
         // Both trump - higher wins
         if (trumpRules.compare(currentCard, winningCard) > 0) {
           winningCard = currentCard;
         }
-      } else if (!trumpRules.isTrump(currentCard) && !trumpRules.isTrump(winningCard)) {
+      } else if (!trumpRules.isTrump(currentCard) &&
+          !trumpRules.isTrump(winningCard)) {
         // Both non-trump - same suit comparison
         if (trumpRules.getEffectiveSuit(currentCard) == trick.ledSuit) {
           if (trumpRules.getEffectiveSuit(winningCard) != trick.ledSuit ||

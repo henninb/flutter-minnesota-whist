@@ -201,8 +201,7 @@ void main() {
       expect(find.byIcon(Icons.check), findsOneWidget);
     });
 
-    testWidgets('has proper icons and appearance',
-        (WidgetTester tester) async {
+    testWidgets('has proper icons and appearance', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

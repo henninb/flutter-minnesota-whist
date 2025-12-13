@@ -43,160 +43,156 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
     final colorScheme = theme.colorScheme;
 
     // Separate cards by color
-    final blackCards = widget.playerHand
-        .where(_isBlackCard)
-        .toList()
+    final blackCards = widget.playerHand.where(_isBlackCard).toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
 
-    final redCards = widget.playerHand
-        .where((c) => !_isBlackCard(c))
-        .toList()
+    final redCards = widget.playerHand.where((c) => !_isBlackCard(c)).toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
 
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Instructions
+          // Instructions
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Select a card to place your bid:',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const SizedBox(width: 28),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '♠♣ Black = HIGH (win tricks)',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '♥♦ Red = LOW (lose tricks)',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Current selection display
+          if (widget.selectedCard != null) ...[
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.secondaryContainer,
+                    colorScheme.secondaryContainer.withValues(alpha: 0.8),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: colorScheme.primary.withValues(alpha: 0.3),
+                  color: colorScheme.secondary.withValues(alpha: 0.5),
+                  width: 2,
                 ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Select a card to place your bid:',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.secondary.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const SizedBox(width: 28),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '♠♣ Black = HIGH (win tricks)',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '♥♦ Red = LOW (lose tricks)',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.gavel,
+                    color: colorScheme.onSecondaryContainer,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Bidding ${_getBidType(widget.selectedCard!).name.toUpperCase()} with ${widget.selectedCard!.label}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
+          ],
 
-            // Current selection display
-            if (widget.selectedCard != null) ...[
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colorScheme.secondaryContainer,
-                      colorScheme.secondaryContainer.withValues(alpha: 0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colorScheme.secondary.withValues(alpha: 0.5),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.secondary.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.gavel,
-                      color: colorScheme.onSecondaryContainer,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Bidding ${_getBidType(widget.selectedCard!).name.toUpperCase()} with ${widget.selectedCard!.label}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
+          // Black cards (HIGH bid)
+          _buildCardSection(
+            context,
+            title: 'Black Cards (HIGH Bid)',
+            subtitle: 'Choose to win as many tricks as possible',
+            cards: blackCards,
+            bidType: BidType.high,
+            sectionColor: Colors.grey.shade800,
+          ),
 
-            // Black cards (HIGH bid)
-            _buildCardSection(
-              context,
-              title: 'Black Cards (HIGH Bid)',
-              subtitle: 'Choose to win as many tricks as possible',
-              cards: blackCards,
-              bidType: BidType.high,
-              sectionColor: Colors.grey.shade800,
-            ),
+          const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+          // Red cards (LOW bid)
+          _buildCardSection(
+            context,
+            title: 'Red Cards (LOW Bid)',
+            subtitle: 'Choose to lose as many tricks as possible',
+            cards: redCards,
+            bidType: BidType.low,
+            sectionColor: Colors.red.shade700,
+          ),
 
-            // Red cards (LOW bid)
-            _buildCardSection(
-              context,
-              title: 'Red Cards (LOW Bid)',
-              subtitle: 'Choose to lose as many tricks as possible',
-              cards: redCards,
-              bidType: BidType.low,
-              sectionColor: Colors.red.shade700,
-            ),
-
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -308,7 +304,8 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: colorScheme.primary.withValues(alpha: 0.3),
+                                color:
+                                    colorScheme.primary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -316,7 +313,8 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
                           : isHovered
                               ? [
                                   BoxShadow(
-                                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                                    color: colorScheme.shadow
+                                        .withValues(alpha: 0.1),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -331,14 +329,18 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
                           style: TextStyle(
                             fontSize: isSelected ? 26 : 24,
                             fontWeight: FontWeight.bold,
-                            color: card.isRed ? Colors.red.shade700 : Colors.black87,
+                            color: card.isRed
+                                ? Colors.red.shade700
+                                : Colors.black87,
                           ),
                         ),
                         Text(
                           card.suitSymbol,
                           style: TextStyle(
                             fontSize: isSelected ? 24 : 22,
-                            color: card.isRed ? Colors.red.shade700 : Colors.black87,
+                            color: card.isRed
+                                ? Colors.red.shade700
+                                : Colors.black87,
                           ),
                         ),
                       ],

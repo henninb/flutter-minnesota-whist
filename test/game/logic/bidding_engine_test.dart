@@ -35,7 +35,12 @@ class MockBiddingEngine extends BiddingEngine {
     if (isComplete(bids)) return null;
 
     // Simple mock: bid in position order
-    final positions = [Position.south, Position.west, Position.north, Position.east];
+    final positions = [
+      Position.south,
+      Position.west,
+      Position.north,
+      Position.east,
+    ];
     return positions[bids.length];
   }
 
@@ -91,7 +96,11 @@ void main() {
       });
 
       test('winner() creates won result with winner data', () {
-        final bid = Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs));
+        final bid = Bid(
+          bidType: BidType.high,
+          bidder: Position.south,
+          bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+        );
         final result = AuctionResult.winner(
           winningBid: bid,
           handType: BidType.high,
@@ -107,7 +116,11 @@ void main() {
       });
 
       test('winner() supports additional data', () {
-        final bid = Bid(bidType: BidType.low, bidder: Position.east, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs));
+        final bid = Bid(
+          bidType: BidType.low,
+          bidder: Position.east,
+          bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+        );
         final additionalData = {'tricks': 7, 'trump': 'spades'};
         final result = AuctionResult.winner(
           winningBid: bid,
@@ -136,7 +149,11 @@ void main() {
         final bids = [
           BidEntry(
             bidder: Position.south,
-            bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.south,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         ];
         expect(biddingEngine.isComplete(bids), isFalse);
@@ -146,19 +163,35 @@ void main() {
         final bids = [
           BidEntry(
             bidder: Position.south,
-            bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.south,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
           BidEntry(
             bidder: Position.west,
-            bid: Bid(bidType: BidType.low, bidder: Position.west, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.low,
+              bidder: Position.west,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
           BidEntry(
             bidder: Position.north,
-            bid: Bid(bidType: BidType.high, bidder: Position.north, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.north,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
           BidEntry(
             bidder: Position.east,
-            bid: Bid(bidType: BidType.low, bidder: Position.east, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.low,
+              bidder: Position.east,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         ];
         expect(biddingEngine.isComplete(bids), isTrue);
@@ -172,7 +205,11 @@ void main() {
         final bids = [
           BidEntry(
             bidder: Position.south,
-            bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.south,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         ];
         expect(biddingEngine.getNextBidder(bids), equals(Position.west));
@@ -183,7 +220,11 @@ void main() {
           4,
           (i) => BidEntry(
             bidder: Position.values[i],
-            bid: Bid(bidType: BidType.high, bidder: Position.values[i], bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.values[i],
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         );
         expect(biddingEngine.getNextBidder(bids), isNull);
@@ -191,7 +232,11 @@ void main() {
 
       test('validateBid allows first bid from player', () {
         final validation = biddingEngine.validateBid(
-          bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+          bid: Bid(
+            bidType: BidType.high,
+            bidder: Position.south,
+            bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+          ),
           bidder: Position.south,
           currentBids: [],
         );
@@ -202,12 +247,20 @@ void main() {
         final bids = [
           BidEntry(
             bidder: Position.south,
-            bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.south,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         ];
 
         final validation = biddingEngine.validateBid(
-          bid: Bid(bidType: BidType.low, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+          bid: Bid(
+            bidType: BidType.low,
+            bidder: Position.south,
+            bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+          ),
           bidder: Position.south,
           currentBids: bids,
         );
@@ -220,7 +273,11 @@ void main() {
         final bids = [
           BidEntry(
             bidder: Position.south,
-            bid: Bid(bidType: BidType.high, bidder: Position.south, bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.south,
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         ];
 
@@ -233,13 +290,20 @@ void main() {
           4,
           (i) => BidEntry(
             bidder: Position.values[i],
-            bid: Bid(bidType: BidType.high, bidder: Position.values[i], bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs)),
+            bid: Bid(
+              bidType: BidType.high,
+              bidder: Position.values[i],
+              bidCard: PlayingCard(rank: Rank.two, suit: Suit.clubs),
+            ),
           ),
         );
 
         final result = biddingEngine.determineWinner(bids);
         expect(result.status, equals(AuctionStatus.won));
-        expect(result.winner, equals(Position.north)); // First bidder (Position.values[0])
+        expect(
+          result.winner,
+          equals(Position.north),
+        ); // First bidder (Position.values[0])
       });
     });
 

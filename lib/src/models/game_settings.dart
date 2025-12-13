@@ -39,7 +39,8 @@ class GameSettings {
     return GameSettings(
       cardSelectionMode: cardSelectionMode ?? this.cardSelectionMode,
       countingMode: countingMode ?? this.countingMode,
-      selectedTheme: clearSelectedTheme ? null : (selectedTheme ?? this.selectedTheme),
+      selectedTheme:
+          clearSelectedTheme ? null : (selectedTheme ?? this.selectedTheme),
       selectedVariant: selectedVariant ?? this.selectedVariant,
     );
   }
@@ -91,5 +92,10 @@ class GameSettings {
   }
 
   @override
-  int get hashCode => Object.hash(cardSelectionMode, countingMode, selectedTheme, selectedVariant);
+  int get hashCode => Object.hash(
+        cardSelectionMode,
+        countingMode,
+        selectedTheme,
+        selectedVariant,
+      );
 }

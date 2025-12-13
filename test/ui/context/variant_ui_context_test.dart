@@ -233,7 +233,10 @@ void main() {
       );
 
       expect(action.isEnabled, isFalse);
-      expect(action.disabledReason, equals('Cannot guarantee all remaining tricks'));
+      expect(
+        action.disabledReason,
+        equals('Cannot guarantee all remaining tricks'),
+      );
     });
 
     test('supports various icon types', () {

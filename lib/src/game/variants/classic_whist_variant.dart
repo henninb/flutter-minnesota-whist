@@ -49,7 +49,8 @@ class ClassicWhistVariant implements GameVariant {
   }
 
   @override
-  TrumpSelectionMethod get trumpSelectionMethod => TrumpSelectionMethod.lastCard;
+  TrumpSelectionMethod get trumpSelectionMethod =>
+      TrumpSelectionMethod.lastCard;
 
   @override
   Suit? determineTrumpSuit(GameState state) {
@@ -289,12 +290,10 @@ class ClassicWhistScoringEngine implements ScoringEngine {
     final eastWestTricks = additionalParams?['eastWestTricks'] as int? ?? 0;
 
     // Calculate odd tricks (tricks beyond the book of 6)
-    final nsOddTricks = northSouthTricks > bookSize
-        ? northSouthTricks - bookSize
-        : 0;
-    final ewOddTricks = eastWestTricks > bookSize
-        ? eastWestTricks - bookSize
-        : 0;
+    final nsOddTricks =
+        northSouthTricks > bookSize ? northSouthTricks - bookSize : 0;
+    final ewOddTricks =
+        eastWestTricks > bookSize ? eastWestTricks - bookSize : 0;
 
     // Each odd trick scores 1 point
     final nsPoints = nsOddTricks * pointsPerOddTrick;
@@ -305,23 +304,20 @@ class ClassicWhistScoringEngine implements ScoringEngine {
 
     if (nsPoints > 0) {
       explanations.add(
-        'North-South: $northSouthTricks tricks - $bookSize (book) = '
-        '$nsOddTricks odd tricks × $pointsPerOddTrick pt = $nsPoints points'
-      );
+          'North-South: $northSouthTricks tricks - $bookSize (book) = '
+          '$nsOddTricks odd tricks × $pointsPerOddTrick pt = $nsPoints points');
     } else {
       explanations.add(
-        'North-South: $northSouthTricks tricks (book or less) = 0 points'
+        'North-South: $northSouthTricks tricks (book or less) = 0 points',
       );
     }
 
     if (ewPoints > 0) {
-      explanations.add(
-        'East-West: $eastWestTricks tricks - $bookSize (book) = '
-        '$ewOddTricks odd tricks × $pointsPerOddTrick pt = $ewPoints points'
-      );
+      explanations.add('East-West: $eastWestTricks tricks - $bookSize (book) = '
+          '$ewOddTricks odd tricks × $pointsPerOddTrick pt = $ewPoints points');
     } else {
       explanations.add(
-        'East-West: $eastWestTricks tricks (book or less) = 0 points'
+        'East-West: $eastWestTricks tricks (book or less) = 0 points',
       );
     }
 

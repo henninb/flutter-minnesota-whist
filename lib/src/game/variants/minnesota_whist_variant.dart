@@ -68,7 +68,8 @@ class MinnesotaWhistVariant implements GameVariant {
   }
 
   @override
-  int get winningScore => MinnesotaWhistScoringEngineAdapter.defaultWinningScore;
+  int get winningScore =>
+      MinnesotaWhistScoringEngineAdapter.defaultWinningScore;
 
   @override
   bool get allowsClaimingTricks => false;

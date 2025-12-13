@@ -79,8 +79,7 @@ class AuctionResult {
         message: message,
       );
 
-  factory AuctionResult.allPass({required String message}) =>
-      AuctionResult._(
+  factory AuctionResult.allPass({required String message}) => AuctionResult._(
         status: AuctionStatus.allPass,
         message: message,
       );

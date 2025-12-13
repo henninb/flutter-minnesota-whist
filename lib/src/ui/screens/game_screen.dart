@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../game/engine/game_engine.dart';
 import '../../game/engine/game_state.dart';
 import '../../game/models/game_models.dart';
+import '../../game/variants/variant_type.dart';
 import '../../models/game_settings.dart';
 import '../../models/theme_models.dart';
 import '../widgets/overlays/bidding_bottom_sheet.dart';
@@ -9,6 +10,9 @@ import '../widgets/overlays/game_over_modal.dart';
 import '../widgets/overlays/setup_overlay.dart';
 import '../widgets/overlays/welcome_overlay.dart';
 import '../widgets/persistent_game_board.dart';
+import '../widgets/bid_whist_bidding_dialog.dart';
+import '../widgets/oh_hell_bidding_dialog.dart';
+import '../widgets/widow_whist_bidding_dialog.dart';
 import 'settings_screen.dart';
 
 /// Main game screen for Minnesota Whist using single-page overlay design.
@@ -47,7 +51,9 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🎮 [GameScreen.build] Current settings variant: ${widget.currentSettings.selectedVariant}');
+    debugPrint(
+      '🎮 [GameScreen.build] Current settings variant: ${widget.currentSettings.selectedVariant}',
+    );
     return AnimatedBuilder(
       animation: widget.engine,
       builder: (context, _) {
@@ -57,15 +63,21 @@ class _GameScreenState extends State<GameScreen> {
         _resetOverlayFlags(state);
 
         // Show bottom sheets based on game phase
-        debugPrint('🎯 [UI TIMING] Build phase: ${state.currentPhase}, currentBidder: ${state.currentBidder}, biddingOverlayShown: $_biddingOverlayShown');
+        debugPrint(
+          '🎯 [UI TIMING] Build phase: ${state.currentPhase}, currentBidder: ${state.currentBidder}, biddingOverlayShown: $_biddingOverlayShown',
+        );
 
         // For bidding, show immediately; for others use post-frame callback
         // Minnesota Whist: Check showBiddingDialog flag instead of currentBidder (simultaneous bidding)
         if (state.showBiddingDialog && !_biddingOverlayShown) {
-          debugPrint('🎯 [UI TIMING] Scheduling bidding sheet via postFrameCallback');
+          debugPrint(
+            '🎯 [UI TIMING] Scheduling bidding sheet via postFrameCallback',
+          );
           // Show bidding sheet immediately without delay
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            debugPrint('🎯 [UI TIMING] postFrameCallback executing for bidding sheet');
+            debugPrint(
+              '🎯 [UI TIMING] postFrameCallback executing for bidding sheet',
+            );
             if (!mounted) return;
             _biddingOverlayShown = true;
             _showBiddingSheet(context, state);
@@ -108,7 +120,9 @@ class _GameScreenState extends State<GameScreen> {
               if (!state.gameStarted)
                 WelcomeOverlay(
                   onStartGame: () {
-                    debugPrint('🎮 [GameScreen] Starting game with variant: ${widget.currentSettings.selectedVariant}');
+                    debugPrint(
+                      '🎮 [GameScreen] Starting game with variant: ${widget.currentSettings.selectedVariant}',
+                    );
                     widget.engine.startNewGame(
                       variant: widget.currentSettings.selectedVariant,
                     );
@@ -166,7 +180,6 @@ class _GameScreenState extends State<GameScreen> {
       _biddingOverlayShown = true;
       _showBiddingSheet(context, state);
     }
-
   }
 
   /// Show setup overlay (cut for deal results)
@@ -182,51 +195,152 @@ class _GameScreenState extends State<GameScreen> {
   /// Show bidding bottom sheet
   void _showBiddingSheet(BuildContext context, GameState state) {
     debugPrint('🎯 [UI TIMING] _showBiddingSheet() called, showing modal');
-    showModalBottomSheet(
+    debugPrint('🎯 [VARIANT] Current variant: ${state.variantType}');
+
+    // Check variant type and show appropriate bidding UI
+    if (state.variantType == VariantType.bidWhist) {
+      _showBidWhistBiddingDialog(context, state);
+    } else if (state.variantType == VariantType.ohHell) {
+      _showOhHellBiddingDialog(context, state);
+    } else if (state.variantType == VariantType.widowWhist) {
+      _showWidowWhistBiddingDialog(context, state);
+    } else {
+      // Minnesota Whist or other variants with simultaneous bidding
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false, // Must bid or pass
+        enableDrag: false,
+        builder: (context) {
+          debugPrint('🎯 [UI TIMING] Bidding sheet builder called');
+          return DraggableScrollableSheet(
+            initialChildSize: 0.95,
+            minChildSize: 0.6,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => AnimatedBuilder(
+              animation: widget.engine,
+              builder: (context, _) {
+                final currentState = widget.engine.state;
+
+                // Auto-close sheet when bidding phase ends
+                if (!currentState.isBiddingPhase) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  });
+                }
+
+                return BiddingBottomSheet(
+                  key: ValueKey(
+                    currentState.playerHand.length +
+                        currentState.playerHand.hashCode,
+                  ),
+                  state: currentState,
+                  onCardSelected: (card) {
+                    // Store the selected card but don't submit yet
+                    widget.engine.selectBidCard(card);
+                  },
+                  onConfirm: () {
+                    // Confirm and submit the bid
+                    widget.engine.confirmBid();
+                  },
+                  onTestHandSelected: (testHand) {
+                    widget.engine.applyTestHand(testHand);
+                    // Don't close the bidding sheet - let user bid with new hand
+                  },
+                );
+              },
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  /// Show Bid Whist sequential bidding dialog
+  void _showBidWhistBiddingDialog(BuildContext context, GameState state) {
+    debugPrint('🎯 [BID WHIST] Showing sequential bidding dialog');
+
+    // Check if it's the player's turn to bid
+    if (state.currentBidder != Position.south) {
+      debugPrint('🎯 [BID WHIST] Not player\'s turn, waiting for AI');
+      return;
+    }
+
+    // Get highest bid so far
+    int? highestBid;
+    for (final entry in state.bidHistory) {
+      // TODO: Extract book count from bid
+      // For now, just track if there are any bids
+    }
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      isDismissible: false, // Must bid or pass
-      enableDrag: false,
-      builder: (context) {
-        debugPrint('🎯 [UI TIMING] Bidding sheet builder called');
-        return DraggableScrollableSheet(
-          initialChildSize: 0.95,
-          minChildSize: 0.6,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) => AnimatedBuilder(
-            animation: widget.engine,
-            builder: (context, _) {
-              final currentState = widget.engine.state;
+      barrierDismissible: false,
+      builder: (context) => BidWhistBiddingDialog(
+        currentBidder: state.currentBidder ?? Position.south,
+        highestBid: highestBid,
+        onBid: (books, isUptown) {
+          debugPrint(
+            '🎯 [BID WHIST] Player bid: $books books, ${isUptown ? "Uptown" : "Downtown"}',
+          );
+          widget.engine.placeBidWhistBid(books, isUptown);
+        },
+        onPass: () {
+          debugPrint('🎯 [BID WHIST] Player passed');
+          widget.engine.placeBidWhistPass();
+        },
+      ),
+    );
+  }
 
-              // Auto-close sheet when bidding phase ends
-              if (!currentState.isBiddingPhase) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  }
-                });
-              }
+  /// Show Widow Whist bidding dialog
+  void _showWidowWhistBiddingDialog(BuildContext context, GameState state) {
+    debugPrint('🎯 [WIDOW WHIST] Showing bidding dialog');
 
-              return BiddingBottomSheet(
-                key: ValueKey(currentState.playerHand.length + currentState.playerHand.hashCode),
-                state: currentState,
-                onCardSelected: (card) {
-                  // Store the selected card but don't submit yet
-                  widget.engine.selectBidCard(card);
-                },
-                onConfirm: () {
-                  // Confirm and submit the bid
-                  widget.engine.confirmBid();
-                },
-                onTestHandSelected: (testHand) {
-                  widget.engine.applyTestHand(testHand);
-                  // Don't close the bidding sheet - let user bid with new hand
-                },
-              );
-            },
-          ),
-        );
-      },
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WidowWhistBiddingDialog(
+        onBid: (tricks) {
+          debugPrint('🎯 [WIDOW WHIST] Player bid: $tricks tricks');
+          widget.engine.placeWidowWhistBid(tricks);
+        },
+      ),
+    );
+  }
+
+  /// Show Oh Hell sequential bidding dialog
+  void _showOhHellBiddingDialog(BuildContext context, GameState state) {
+    debugPrint('🎯 [OH HELL] Showing sequential bidding dialog');
+
+    // Check if it's the player's turn to bid
+    if (state.currentBidder != Position.south) {
+      debugPrint('🎯 [OH HELL] Not player\'s turn, waiting for AI');
+      return;
+    }
+
+    // Extract current bids from bid history
+    final currentBids = <Position, int>{};
+    for (final entry in state.bidHistory) {
+      if (entry.bid is int) {
+        currentBids[entry.bidder] = entry.bid as int;
+      }
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => OhHellBiddingDialog(
+        currentBidder: state.currentBidder ?? Position.south,
+        currentBids: currentBids,
+        tricksAvailable: 13, // Standard hand size
+        onBid: (tricks) {
+          debugPrint('🎯 [OH HELL] Player bid: $tricks tricks');
+          widget.engine.placeOhHellBid(tricks);
+        },
+      ),
     );
   }
 

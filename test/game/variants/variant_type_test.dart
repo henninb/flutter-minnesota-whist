@@ -60,7 +60,8 @@ void main() {
       });
 
       test('all display names are unique', () {
-        final displayNames = VariantType.values.map((v) => v.displayName).toSet();
+        final displayNames =
+            VariantType.values.map((v) => v.displayName).toSet();
         expect(displayNames.length, equals(VariantType.values.length));
       });
     });

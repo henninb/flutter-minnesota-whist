@@ -59,7 +59,8 @@ class _BiddingBottomSheetState extends State<BiddingBottomSheet> {
             height: 4,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
+              color:
+                  Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -146,9 +147,10 @@ class _BiddingBottomSheetState extends State<BiddingBottomSheet> {
               width: double.infinity,
               height: 50,
               child: FilledButton.icon(
-                onPressed: (_selectedCard ?? widget.state.pendingBidCard) != null
-                    ? widget.onConfirm
-                    : null,
+                onPressed:
+                    (_selectedCard ?? widget.state.pendingBidCard) != null
+                        ? widget.onConfirm
+                        : null,
                 icon: const Icon(Icons.check_circle),
                 label: Text(
                   (_selectedCard ?? widget.state.pendingBidCard) != null

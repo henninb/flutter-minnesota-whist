@@ -60,7 +60,8 @@ class Bid {
 
   final BidType bidType; // high or low
   final Position bidder;
-  final PlayingCard bidCard; // The card used to indicate the bid (black=high, red=low)
+  final PlayingCard
+      bidCard; // The card used to indicate the bid (black=high, red=low)
 
   // Check if this is a high bid (grand)
   bool get isHigh => bidType == BidType.high;
@@ -69,7 +70,8 @@ class Bid {
   bool get isLow => bidType == BidType.low;
 
   @override
-  String toString() => '${bidType == BidType.high ? "High" : "Low"} by ${bidder.name}';
+  String toString() =>
+      '${bidType == BidType.high ? "High" : "Low"} by ${bidder.name}';
 
   @override
   bool operator ==(Object other) {
@@ -183,9 +185,7 @@ class BidEntry {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is BidEntry &&
-        other.bidder == bidder &&
-        other.bid == bid;
+    return other is BidEntry && other.bidder == bidder && other.bid == bid;
   }
 
   @override

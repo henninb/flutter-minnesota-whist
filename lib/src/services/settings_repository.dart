@@ -15,7 +15,9 @@ class SettingsRepository {
 
       if (jsonString == null) {
         if (kDebugMode) {
-          debugPrint('[SettingsRepository] No saved settings found, using defaults');
+          debugPrint(
+            '[SettingsRepository] No saved settings found, using defaults',
+          );
         }
         return const GameSettings(); // Return default settings
       }
@@ -25,13 +27,17 @@ class SettingsRepository {
 
       if (kDebugMode) {
         debugPrint('[SettingsRepository] Settings loaded successfully');
-        debugPrint('[SettingsRepository] Loaded variant: ${settings.selectedVariant}');
+        debugPrint(
+          '[SettingsRepository] Loaded variant: ${settings.selectedVariant}',
+        );
       }
 
       return settings;
     } on FormatException catch (e) {
       if (kDebugMode) {
-        debugPrint('[SettingsRepository] ERROR: Invalid JSON format in saved settings: $e');
+        debugPrint(
+          '[SettingsRepository] ERROR: Invalid JSON format in saved settings: $e',
+        );
         debugPrint('[SettingsRepository] Falling back to default settings');
       }
       return const GameSettings();
@@ -55,12 +61,16 @@ class SettingsRepository {
 
       if (kDebugMode) {
         debugPrint('[SettingsRepository] Settings saved successfully');
-        debugPrint('[SettingsRepository] Saved variant: ${settings.selectedVariant}');
+        debugPrint(
+          '[SettingsRepository] Saved variant: ${settings.selectedVariant}',
+        );
         debugPrint('[SettingsRepository] JSON: $jsonString');
       }
     } on FormatException catch (e) {
       if (kDebugMode) {
-        debugPrint('[SettingsRepository] ERROR: Failed to encode settings to JSON: $e');
+        debugPrint(
+          '[SettingsRepository] ERROR: Failed to encode settings to JSON: $e',
+        );
       }
       // Silently fail - settings just won't persist
     } catch (e, stackTrace) {

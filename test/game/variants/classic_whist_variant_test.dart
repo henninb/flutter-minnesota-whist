@@ -24,7 +24,10 @@ void main() {
 
       test('has full description', () {
         expect(variant.description, isNotEmpty);
-        expect(variant.description.length, greaterThan(variant.shortDescription.length));
+        expect(
+          variant.description.length,
+          greaterThan(variant.shortDescription.length),
+        );
       });
 
       test('has icon', () {

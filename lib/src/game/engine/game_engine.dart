@@ -5,12 +5,14 @@ import 'package:flutter/foundation.dart';
 import '../models/card.dart';
 import '../models/game_models.dart';
 import '../logic/deal_utils.dart';
-import '../logic/minnesota_whist_bidding_engine.dart';
+import '../logic/bidding_engine.dart';
+import '../logic/minnesota_whist_bidding_engine.dart' hide AuctionStatus;
+import '../logic/bid_whist_bidding_engine.dart';
+import '../variants/widow_whist_variant.dart';
 import '../logic/bidding_ai.dart';
 import '../logic/trick_engine.dart';
 import '../logic/play_ai.dart';
 import '../logic/trump_rules.dart';
-import '../logic/minnesota_whist_scorer.dart' hide GameOverStatus;
 import '../logic/claim_analyzer.dart';
 import '../logic/scoring_engine.dart';
 import '../variants/variant_type.dart';
@@ -78,7 +80,9 @@ class GameEngine extends ChangeNotifier {
   /// Start a new game with the specified variant
   void startNewGame({VariantType? variant}) {
     final selectedVariant = variant ?? VariantType.minnesotaWhist;
-    _debugLog('🎮 [GameEngine] Starting new game with variant: $selectedVariant');
+    _debugLog(
+      '🎮 [GameEngine] Starting new game with variant: $selectedVariant',
+    );
     _updateState(
       GameState(
         gameStarted: true,
@@ -87,7 +91,9 @@ class GameEngine extends ChangeNotifier {
         variantType: selectedVariant,
       ),
     );
-    _debugLog('🎮 [GameEngine] GameState variantType after update: ${_state.variantType}');
+    _debugLog(
+      '🎮 [GameEngine] GameState variantType after update: ${_state.variantType}',
+    );
     // Immediately show the cut for deal deck
     cutForDeal();
   }
@@ -178,12 +184,25 @@ class GameEngine extends ChangeNotifier {
   /// Deal cards
   void dealCards() {
     final deck = createDeck();
-    final dealResult = dealHand(deck: deck, dealer: _state.dealer);
 
-    // DEBUG: Log the deal
-    _debugLog(
-      '\n========== DEAL CARDS (Hand #${_state.handNumber + 1}) ==========',
-    );
+    // Deal with or without kitty based on variant
+    final DealResult dealResult;
+    if (_state.variant.hasSpecialCards && _state.variant.specialCardCount > 0) {
+      dealResult = dealHandWithKitty(
+        deck: deck,
+        dealer: _state.dealer,
+        kittySize: _state.variant.specialCardCount,
+      );
+      _debugLog(
+        '\n========== DEAL CARDS WITH KITTY (Hand #${_state.handNumber + 1}) ==========',
+      );
+    } else {
+      dealResult = dealHand(deck: deck, dealer: _state.dealer);
+      _debugLog(
+        '\n========== DEAL CARDS (Hand #${_state.handNumber + 1}) ==========',
+      );
+    }
+
     _debugLog('Dealer: ${_state.dealer.name}');
     _debugLog('Deck size: ${deck.length}');
 
@@ -193,9 +212,15 @@ class GameEngine extends ChangeNotifier {
       _debugLog('${position.name}: ${hand.length} cards');
     }
 
+    // Log kitty if present
+    if (dealResult.kitty != null) {
+      _debugLog('Kitty: ${dealResult.kitty!.length} cards');
+    }
+
     // Count total cards
     final totalCards =
-        dealResult.hands.values.fold(0, (sum, hand) => sum + hand.length);
+        dealResult.hands.values.fold(0, (sum, hand) => sum + hand.length) +
+            (dealResult.kitty?.length ?? 0);
     _debugLog('Total cards dealt: $totalCards (should be 52)');
     _debugLog('========================================\n');
 
@@ -204,23 +229,33 @@ class GameEngine extends ChangeNotifier {
 
     _debugLog('⏱️ [TIMING] About to update state with dealt cards...');
 
-    // Determine trump suit for variants that use last card method
+    // Determine trump suit based on variant's trump selection method
     Suit? trumpSuit;
     if (_state.variant.trumpSelectionMethod == TrumpSelectionMethod.lastCard) {
       // Last card dealt to the dealer determines trump
       final dealerHand = dealResult.hands[_state.dealer]!;
       final lastCard = dealerHand.last;
       trumpSuit = lastCard.suit;
-      _debugLog('🎮 [TRUMP] Last card dealt: $lastCard, trump suit: $trumpSuit');
+      _debugLog(
+        '🎮 [TRUMP] Last card dealt: $lastCard, trump suit: $trumpSuit',
+      );
+    } else if (_state.variant.trumpSelectionMethod ==
+        TrumpSelectionMethod.randomCard) {
+      // Random card from remaining deck (Oh Hell style)
+      // For simplicity, just pick a random suit
+      final suits = [Suit.spades, Suit.hearts, Suit.diamonds, Suit.clubs];
+      trumpSuit = suits[Random().nextInt(suits.length)];
+      _debugLog('🎮 [TRUMP] Random trump selected: $trumpSuit');
     }
 
-    // Update state with dealt cards
+    // Update state with dealt cards (and kitty if present)
     _updateState(
       _state.copyWith(
         playerHand: sortedPlayerHand,
         partnerHand: dealResult.hands[Position.north],
         opponentEastHand: dealResult.hands[Position.east],
         opponentWestHand: dealResult.hands[Position.west],
+        kitty: dealResult.kitty ?? [], // Store kitty for Bid Whist
         handNumber: _state.handNumber + 1,
         cutCards: {}, // Clear cut cards after dealing
         trumpSuit: trumpSuit, // Set trump for Classic Whist
@@ -230,7 +265,9 @@ class GameEngine extends ChangeNotifier {
     _debugLog('⏱️ [TIMING] State updated, checking if variant uses bidding...');
     _debugLog('🎮 [VARIANT CHECK] Current variant: ${_state.variant.name}');
     _debugLog('🎮 [VARIANT CHECK] Uses bidding: ${_state.variant.usesBidding}');
-    _debugLog('🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}');
+    _debugLog(
+      '🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}',
+    );
 
     // Check if the variant uses bidding
     if (_state.variant.usesBidding) {
@@ -239,7 +276,9 @@ class GameEngine extends ChangeNotifier {
       _startBidding();
       _debugLog('⏱️ [TIMING] _startBidding() completed');
     } else {
-      _debugLog('⏱️ [TIMING] Variant does not use bidding, starting play phase...');
+      _debugLog(
+        '⏱️ [TIMING] Variant does not use bidding, starting play phase...',
+      );
       // Skip bidding and go straight to play
       _startPlayWithoutBidding();
     }
@@ -286,11 +325,16 @@ class GameEngine extends ChangeNotifier {
     final deck = createDeck();
     for (final testCard in testHand) {
       final existsInDeck = deck.any(
-        (deckCard) => deckCard.rank == testCard.rank && deckCard.suit == testCard.suit,
+        (deckCard) =>
+            deckCard.rank == testCard.rank && deckCard.suit == testCard.suit,
       );
       if (!existsInDeck) {
-        _debugLog('⚠️ ERROR: Test hand contains invalid card: ${testCard.label}');
-        _debugLog('⚠️ Test hand rejected - all cards must be from standard deck');
+        _debugLog(
+          '⚠️ ERROR: Test hand contains invalid card: ${testCard.label}',
+        );
+        _debugLog(
+          '⚠️ Test hand rejected - all cards must be from standard deck',
+        );
         return;
       }
     }
@@ -319,7 +363,9 @@ class GameEngine extends ChangeNotifier {
       }
     }
 
-    _debugLog('Available cards after removing test hand: ${availableCards.length} (should be 39)');
+    _debugLog(
+      'Available cards after removing test hand: ${availableCards.length} (should be 39)',
+    );
 
     // Shuffle available cards
     availableCards.shuffle(Random());
@@ -353,14 +399,40 @@ class GameEngine extends ChangeNotifier {
 
   void _startBidding() {
     _debugLog('⏱️ [TIMING] _startBidding() called');
-    _debugLog('Minnesota Whist: All players place bid cards simultaneously');
+
+    // Branch based on variant type
+    if (_state.variantType == VariantType.bidWhist) {
+      _debugLog('🎮 [BID WHIST] Starting sequential bidding');
+      _startBidWhistBidding();
+    } else if (_state.variantType == VariantType.ohHell) {
+      _debugLog('🎮 [OH HELL] Starting sequential bidding');
+      _startOhHellBidding();
+    } else if (_state.variantType == VariantType.widowWhist) {
+      _debugLog('🎮 [WIDOW WHIST] All players bid for widow simultaneously');
+      _startMinnesotaWhistBidding(); // Use same simultaneous bidding UI
+    } else {
+      _debugLog(
+        '🎮 [MINNESOTA WHIST] All players place bid cards simultaneously',
+      );
+      _startMinnesotaWhistBidding();
+    }
+  }
+
+  void _startMinnesotaWhistBidding() {
+    // Determine game status message based on variant
+    String statusMessage;
+    if (_state.variantType == VariantType.widowWhist) {
+      statusMessage = 'Bid for the widow (6-12 tricks)';
+    } else {
+      statusMessage = 'Place your bid card (Black=High, Red=Low)';
+    }
 
     _updateState(
       _state.copyWith(
         currentPhase: GamePhase.bidding,
         isBiddingPhase: true,
         bidHistory: [],
-        gameStatus: 'Place your bid card (Black=High, Red=Low)',
+        gameStatus: statusMessage,
         clearCurrentBidder: true,
         clearCurrentHighBid: true,
         clearWinningBid: true,
@@ -376,10 +448,88 @@ class GameEngine extends ChangeNotifier {
     _debugLog('⏱️ [TIMING] showBiddingDialog set to true');
   }
 
+  void _startBidWhistBidding() {
+    // First bidder is to dealer's left
+    final firstBidder = _state.dealer.next;
+
+    _debugLog('🎮 [BID WHIST] First bidder: ${firstBidder.name}');
+
+    _updateState(
+      _state.copyWith(
+        currentPhase: GamePhase.bidding,
+        isBiddingPhase: true,
+        bidHistory: [],
+        currentBidder: firstBidder,
+        gameStatus:
+            'Bidding in progress - ${_state.getName(firstBidder)}\'s turn',
+        clearCurrentHighBid: true,
+        clearWinningBid: true,
+        clearContractor: true,
+        clearHandType: true,
+      ),
+    );
+
+    // If first bidder is AI, trigger AI bid
+    if (firstBidder != Position.south) {
+      Future.delayed(
+        const Duration(milliseconds: 1000),
+        () => _processBidWhistAIBid(firstBidder),
+      );
+    } else {
+      // Player's turn - show dialog
+      _updateState(_state.copyWith(showBiddingDialog: true));
+      _debugLog('🎮 [BID WHIST] Showing bidding dialog for player');
+    }
+  }
+
   /// Player selects a bid card (Minnesota Whist - step 1)
   void selectBidCard(PlayingCard card) {
     _updateState(_state.copyWith(pendingBidCard: card));
     _debugLog('[BID CARD SELECTED] ${card.label}');
+  }
+
+  /// Player places a Bid Whist bid (sequential bidding)
+  void placeBidWhistBid(int books, bool isUptown) {
+    if (_state.currentBidder != Position.south) {
+      _debugLog('ERROR: Not player\'s turn to bid');
+      return;
+    }
+
+    _debugLog(
+      '[BID WHIST] Player bid: $books books, ${isUptown ? "Uptown" : "Downtown"}',
+    );
+
+    // Create bid using BidWhistBiddingEngine helper
+    final bid = BidWhistBiddingEngine.createBookBid(
+      Position.south,
+      books,
+      isUptown: isUptown,
+    );
+
+    final entry = BidEntry(bidder: Position.south, bid: bid);
+    _addBidEntry(entry);
+
+    // Check if bidding is complete, otherwise advance to next bidder
+    _checkBidWhistAuctionProgress();
+  }
+
+  /// Player passes in Bid Whist
+  void placeBidWhistPass() {
+    if (_state.currentBidder != Position.south) {
+      _debugLog('ERROR: Not player\'s turn to bid');
+      return;
+    }
+
+    _debugLog('[BID WHIST] Player passed');
+
+    // Create pass bid using BidWhistBiddingEngine helper
+    final bid = BidWhistBiddingEngine.createPassBid(Position.south);
+
+    final entry = BidEntry(bidder: Position.south, bid: bid);
+    _addBidEntry(entry);
+
+    // Check if bidding is complete, otherwise advance to next bidder
+    _checkBidWhistAuctionProgress();
   }
 
   /// Player confirms their bid card selection (Minnesota Whist - step 2)
@@ -423,13 +573,17 @@ class GameEngine extends ChangeNotifier {
 
     _debugLog('\n[PLAYER BID]');
     _debugLog('Card: ${bidCard.label}');
-    _debugLog('Bid type: ${bid.bidType == BidType.high ? "HIGH (black)" : "LOW (red)"}');
+    _debugLog(
+      'Bid type: ${bid.bidType == BidType.high ? "HIGH (black)" : "LOW (red)"}',
+    );
 
     _addBidEntry(entry);
-    _updateState(_state.copyWith(
-      showBiddingDialog: false,
-      pendingBidCard: null, // Clear the pending card
-    ));
+    _updateState(
+      _state.copyWith(
+        showBiddingDialog: false,
+        pendingBidCard: null, // Clear the pending card
+      ),
+    );
 
     // Collect AI bids simultaneously
     _collectAIBids();
@@ -456,7 +610,9 @@ class GameEngine extends ChangeNotifier {
       final bid = biddingEngine.createBidFromCard(bidCard, position);
       final entry = BidEntry(bidder: position, bid: bid);
 
-      _debugLog('[AI BID] ${_state.getName(position)}: ${bidCard.label} (${bid.bidType == BidType.high ? "HIGH" : "LOW"})');
+      _debugLog(
+        '[AI BID] ${_state.getName(position)}: ${bidCard.label} (${bid.bidType == BidType.high ? "HIGH" : "LOW"})',
+      );
 
       _addBidEntry(entry);
     }
@@ -482,7 +638,9 @@ class GameEngine extends ChangeNotifier {
     final biddingEngine = MinnesotaWhistBiddingEngine(dealer: _state.dealer);
 
     if (!biddingEngine.isComplete(_state.bidHistory)) {
-      _debugLog('[AUCTION] Not complete - waiting for more bids (${_state.bidHistory.length}/4)');
+      _debugLog(
+        '[AUCTION] Not complete - waiting for more bids (${_state.bidHistory.length}/4)',
+      );
       return;
     }
 
@@ -504,13 +662,543 @@ class GameEngine extends ChangeNotifier {
         ),
       );
 
-      // Skip kitty exchange - go directly to play in Minnesota Whist
-      Future.delayed(const Duration(milliseconds: 1500), _startPlay);
+      // Check if variant needs kitty exchange (Bid Whist)
+      if (_state.variant.hasSpecialCards && _state.kitty.isNotEmpty) {
+        _debugLog('🎮 [KITTY] Variant uses kitty, starting exchange phase');
+        Future.delayed(const Duration(milliseconds: 1500), _startKittyExchange);
+      } else {
+        _debugLog('🎮 [PLAY] No kitty, going directly to play phase');
+        Future.delayed(const Duration(milliseconds: 1500), _startPlay);
+      }
     }
   }
 
+  /// Check Bid Whist sequential auction progress
+  void _checkBidWhistAuctionProgress() {
+    final biddingEngine = BidWhistBiddingEngine(dealer: _state.dealer);
+
+    // Check if auction is complete
+    if (biddingEngine.isComplete(_state.bidHistory)) {
+      _debugLog('[BID WHIST AUCTION] Complete - determining winner');
+      final result = biddingEngine.determineWinner(_state.bidHistory);
+
+      if (result.status == AuctionStatus.won) {
+        _updateState(
+          _state.copyWith(
+            isBiddingPhase: false,
+            showBiddingDialog: false,
+            winningBid: result.winningBid,
+            contractor: result.winner,
+            handType: result.handType,
+            gameStatus: result.message,
+            clearCurrentBidder: true,
+          ),
+        );
+
+        // Check if variant needs kitty exchange (Bid Whist)
+        if (_state.variant.hasSpecialCards && _state.kitty.isNotEmpty) {
+          _debugLog('🎮 [KITTY] Starting exchange phase');
+          Future.delayed(
+            const Duration(milliseconds: 1500),
+            _startKittyExchange,
+          );
+        } else {
+          _debugLog('🎮 [PLAY] Going directly to play phase');
+          Future.delayed(const Duration(milliseconds: 1500), _startPlay);
+        }
+      }
+      return;
+    }
+
+    // Not complete - advance to next bidder
+    final nextBidder = biddingEngine.getNextBidder(_state.bidHistory);
+
+    if (nextBidder == null) {
+      _debugLog('[BID WHIST] ERROR: No next bidder but auction not complete');
+      return;
+    }
+
+    _debugLog('[BID WHIST] Advancing to next bidder: ${nextBidder.name}');
+
+    _updateState(
+      _state.copyWith(
+        currentBidder: nextBidder,
+        showBiddingDialog: false, // Close current dialog
+      ),
+    );
+
+    // If next bidder is AI, trigger AI bid
+    if (nextBidder != Position.south) {
+      Future.delayed(
+        const Duration(milliseconds: 1000),
+        () => _processBidWhistAIBid(nextBidder),
+      );
+    } else {
+      // Player's turn - show dialog
+      _updateState(_state.copyWith(showBiddingDialog: true));
+    }
+  }
+
+  /// Process AI bid for Bid Whist sequential bidding
+  void _processBidWhistAIBid(Position position) {
+    _debugLog('[BID WHIST AI] Processing bid for ${position.name}');
+
+    // Simple AI: just pass for now
+    // TODO: Implement proper Bid Whist AI bidding logic
+    // Will need to use: BidWhistBiddingEngine(dealer: _state.dealer) and _state.getHand(position)
+    final bid = BidWhistBiddingEngine.createPassBid(position);
+    final entry = BidEntry(bidder: position, bid: bid);
+
+    _debugLog('[BID WHIST AI] ${_state.getName(position)} passed');
+    _addBidEntry(entry);
+
+    // Continue the auction
+    _checkBidWhistAuctionProgress();
+  }
+
   // ============================================================================
-  // Minnesota Whist - No kitty exchange phase (removed)
+  // OH HELL BIDDING
+  // ============================================================================
+
+  void _startOhHellBidding() {
+    // First bidder is to dealer's left
+    final firstBidder = _state.dealer.next;
+
+    _debugLog('🎮 [OH HELL] First bidder: ${firstBidder.name}');
+
+    _updateState(
+      _state.copyWith(
+        currentPhase: GamePhase.bidding,
+        isBiddingPhase: true,
+        bidHistory: [],
+        currentBidder: firstBidder,
+        gameStatus:
+            'Bidding in progress - ${_state.getName(firstBidder)}\'s turn',
+        clearCurrentHighBid: true,
+        clearWinningBid: true,
+        clearContractor: true,
+        clearHandType: true,
+      ),
+    );
+
+    // If first bidder is AI, trigger AI bid
+    if (firstBidder != Position.south) {
+      Future.delayed(
+        const Duration(milliseconds: 1000),
+        () => _processOhHellAIBid(firstBidder),
+      );
+    } else {
+      // Player's turn - show dialog
+      _updateState(_state.copyWith(showBiddingDialog: true));
+      _debugLog('🎮 [OH HELL] Showing bidding dialog for player');
+    }
+  }
+
+  void placeOhHellBid(int tricks) {
+    if (_state.currentBidder != Position.south) {
+      _debugLog('ERROR: Not player\'s turn to bid');
+      return;
+    }
+
+    _debugLog('[OH HELL] Player bid: $tricks tricks');
+
+    // Wrap integer bid in a Bid object for storage
+    // Use rank to encode the trick count (ace=1, king=13, etc.)
+    final Rank rank;
+    if (tricks == 0) {
+      rank = Rank.two; // Use two for 0 bid
+    } else if (tricks <= 13) {
+      rank = Rank.values[tricks - 1]; // 1->ace, 2->two, etc
+    } else {
+      rank = Rank.ace;
+    }
+
+    final bid = Bid(
+      bidType: BidType.high,
+      bidder: Position.south,
+      bidCard: PlayingCard(rank: rank, suit: Suit.clubs),
+    );
+
+    final entry = BidEntry(bidder: Position.south, bid: bid);
+    _addBidEntry(entry);
+
+    // Check if bidding is complete, otherwise advance to next bidder
+    _checkOhHellAuctionProgress();
+  }
+
+  void _checkOhHellAuctionProgress() {
+    // Check if auction is complete (all 4 players bid)
+    if (_state.bidHistory.length >= 4) {
+      _debugLog('[OH HELL AUCTION] Complete - starting play');
+
+      // In Oh Hell, first player (to dealer's left) leads
+      final leader = _state.dealer.next;
+
+      _updateState(
+        _state.copyWith(
+          isBiddingPhase: false,
+          showBiddingDialog: false,
+          gameStatus: 'All bids placed - play begins',
+          clearCurrentBidder: true,
+          contractor:
+              leader, // Set leader as contractor for _startPlay compatibility
+        ),
+      );
+
+      Future.delayed(const Duration(milliseconds: 1500), _startPlay);
+      return;
+    }
+
+    // Not complete - advance to next bidder
+    final nextBidder = _state.bidHistory.last.bidder.next;
+
+    _debugLog('[OH HELL] Advancing to next bidder: ${nextBidder.name}');
+
+    _updateState(
+      _state.copyWith(
+        currentBidder: nextBidder,
+        showBiddingDialog: false, // Close current dialog
+      ),
+    );
+
+    // If next bidder is AI, trigger AI bid
+    if (nextBidder != Position.south) {
+      Future.delayed(
+        const Duration(milliseconds: 1000),
+        () => _processOhHellAIBid(nextBidder),
+      );
+    } else {
+      // Player's turn - show dialog
+      _updateState(_state.copyWith(showBiddingDialog: true));
+    }
+  }
+
+  void _processOhHellAIBid(Position position) {
+    _debugLog('[OH HELL AI] Processing bid for ${position.name}');
+
+    // Simple AI: bid conservatively based on hand strength
+    // TODO: Implement proper Oh Hell AI bidding logic
+    final hand = _state.getHand(position);
+    final tricks = (hand.length * 0.3).round(); // Bid ~30% of hand size
+
+    _debugLog('[OH HELL AI] ${_state.getName(position)} bid $tricks');
+
+    // Wrap integer bid in a Bid object for storage
+    final Rank rank;
+    if (tricks == 0) {
+      rank = Rank.two; // Use two for 0 bid
+    } else if (tricks <= 13) {
+      rank = Rank.values[tricks - 1]; // 1->ace, 2->two, etc
+    } else {
+      rank = Rank.ace;
+    }
+
+    final bid = Bid(
+      bidType: BidType.high,
+      bidder: position,
+      bidCard: PlayingCard(rank: rank, suit: Suit.clubs),
+    );
+
+    final entry = BidEntry(bidder: position, bid: bid);
+    _addBidEntry(entry);
+
+    // Continue the auction
+    _checkOhHellAuctionProgress();
+  }
+
+  // ============================================================================
+  // KITTY EXCHANGE & TRUMP DECLARATION (Bid Whist)
+  // ============================================================================
+
+  void _startKittyExchange() {
+    _debugLog('\n========== KITTY EXCHANGE ==========');
+    // For now, auto-perform for all players (TODO: Add UI for human player)
+    _performKittyExchange();
+  }
+
+  void _performKittyExchange() {
+    _debugLog('Auto-performing kitty exchange for ${_state.contractor?.name}');
+    // TODO: Implement proper kitty exchange with UI
+    // For now, just move to trump declaration
+    _startTrumpDeclaration();
+  }
+
+  void _startTrumpDeclaration() {
+    _debugLog('\n========== TRUMP DECLARATION ==========');
+    // Auto-select trump (TODO: Add UI for human player)
+    _autoDeclareTrump();
+  }
+
+  void _autoDeclareTrump() {
+    // Simple: pick spades for now
+    final trumpSuit = Suit.spades;
+    _debugLog('Auto-declared trump: $trumpSuit');
+
+    _updateState(
+      _state.copyWith(
+        trumpSuit: trumpSuit,
+      ),
+    );
+
+    // Start play phase
+    Future.delayed(const Duration(milliseconds: 500), _startPlay);
+  }
+
+  // ============================================================================
+  // WIDOW WHIST BIDDING
+  // ============================================================================
+
+  void placeWidowWhistBid(int tricks) {
+    _debugLog('[WIDOW WHIST] Player bid: $tricks tricks');
+
+    // Create bid using Widow Whist encoding (Ace=6, King=12)
+    final bid = WidowWhistBiddingEngine.createTrickBid(Position.south, tricks);
+    final entry = BidEntry(bidder: Position.south, bid: bid);
+
+    _addBidEntry(entry);
+    _updateState(_state.copyWith(showBiddingDialog: false));
+
+    // Collect AI bids for Widow Whist
+    _collectWidowWhistAIBids();
+  }
+
+  /// Collect AI bids for Widow Whist (simultaneous trick bidding)
+  void _collectWidowWhistAIBids() {
+    _debugLog('\n[WIDOW WHIST AI BIDDING] Collecting AI bids...');
+
+    // AI players place their bids (6-12 tricks)
+    for (final position in [Position.north, Position.east, Position.west]) {
+      final hand = _state.getHand(position);
+
+      // Simple AI: count high cards and estimate tricks
+      // TODO: Implement proper Widow Whist bidding AI
+      int highCardCount = 0;
+      for (final card in hand) {
+        if (card.rank.index >= Rank.jack.index) {
+          highCardCount++;
+        }
+      }
+
+      // Bid based on high cards: 6 + (highCards / 2)
+      // This gives: 0-1 high cards = 6 tricks, 2-3 = 7, 4-5 = 8, etc.
+      final bidTricks = (6 + (highCardCount / 2)).round().clamp(6, 12);
+
+      final bid = WidowWhistBiddingEngine.createTrickBid(position, bidTricks);
+      final entry = BidEntry(bidder: position, bid: bid);
+
+      _debugLog(
+        '[AI BID] ${_state.getName(position)}: $bidTricks tricks ($highCardCount high cards)',
+      );
+
+      _addBidEntry(entry);
+    }
+
+    // All bids collected - determine winner
+    _checkWidowWhistAuctionComplete();
+  }
+
+  /// Check if Widow Whist auction is complete and determine winner
+  void _checkWidowWhistAuctionComplete() {
+    final biddingEngine = WidowWhistBiddingEngine(dealer: _state.dealer);
+
+    if (!biddingEngine.isComplete(_state.bidHistory)) {
+      _debugLog(
+        '[WIDOW WHIST AUCTION] Not complete - waiting for more bids (${_state.bidHistory.length}/4)',
+      );
+      return;
+    }
+
+    // Auction complete - determine result
+    final result = biddingEngine.determineWinner(_state.bidHistory);
+
+    _debugLog('[WIDOW WHIST AUCTION] Complete - determining winner');
+
+    if (result.status == AuctionStatus.won) {
+      final winningBid = result.winningBid as Bid;
+      final trickCount =
+          winningBid.bidCard.rank.index + 6; // Decode trick count
+
+      _updateState(
+        _state.copyWith(
+          isBiddingPhase: false,
+          winningBid: result.winningBid,
+          contractor: result.winner,
+          gameStatus:
+              '${_state.getName(result.winner!)} won the widow with $trickCount tricks',
+          clearCurrentBidder: true,
+        ),
+      );
+
+      // Winner gets the widow and must exchange cards
+      _debugLog('🎮 [WIDOW WHIST] Starting widow exchange phase');
+      Future.delayed(const Duration(milliseconds: 1500), _startWidowExchange);
+    }
+  }
+
+  /// Start widow exchange phase
+  void _startWidowExchange() {
+    _debugLog(
+      '[WIDOW EXCHANGE] Starting exchange for ${_state.getName(_state.contractor!)}',
+    );
+
+    // Give widow to contractor by updating their hand in state
+    final contractorHand = _state.getHand(_state.contractor!);
+    final fullHand = [...contractorHand, ..._state.kitty];
+
+    _debugLog(
+      '[WIDOW EXCHANGE] Contractor now has ${fullHand.length} cards (12 + 4 widow)',
+    );
+
+    // Update contractor's hand to include widow
+    if (_state.contractor == Position.south) {
+      _updateState(
+        _state.copyWith(
+          currentPhase: GamePhase.kittyExchange,
+          playerHand: sortHandBySuit(fullHand),
+          gameStatus: 'Select 4 cards to discard and choose trump',
+        ),
+      );
+    } else if (_state.contractor == Position.north) {
+      _updateState(
+        _state.copyWith(
+          currentPhase: GamePhase.kittyExchange,
+          partnerHand: sortHandBySuit(fullHand),
+          gameStatus:
+              '${_state.getName(_state.contractor!)} examining widow...',
+        ),
+      );
+    } else if (_state.contractor == Position.east) {
+      _updateState(
+        _state.copyWith(
+          currentPhase: GamePhase.kittyExchange,
+          opponentEastHand: sortHandBySuit(fullHand),
+          gameStatus:
+              '${_state.getName(_state.contractor!)} examining widow...',
+        ),
+      );
+    } else if (_state.contractor == Position.west) {
+      _updateState(
+        _state.copyWith(
+          currentPhase: GamePhase.kittyExchange,
+          opponentWestHand: sortHandBySuit(fullHand),
+          gameStatus:
+              '${_state.getName(_state.contractor!)} examining widow...',
+        ),
+      );
+    }
+
+    // TODO: Show widow exchange dialog for player
+    // For now, auto-perform exchange for all players
+    _autoPerformWidowExchange();
+  }
+
+  /// Auto-perform widow exchange (temporary until UI is implemented)
+  void _autoPerformWidowExchange() {
+    // Contractor's hand already includes widow (16 cards)
+    final contractorHand = _state.getHand(_state.contractor!);
+
+    if (contractorHand.length != 16) {
+      _debugLog(
+        '⚠️ ERROR: Contractor hand should have 16 cards, has ${contractorHand.length}',
+      );
+    }
+
+    // Simple strategy: discard lowest cards
+    final sortedByValue = contractorHand.toList()
+      ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
+    final discards = sortedByValue.take(4).toList();
+
+    // Choose trump: suit with most cards in remaining hand
+    final remainingHand =
+        contractorHand.where((c) => !discards.contains(c)).toList();
+    final suitCounts = <Suit, int>{};
+    for (final card in remainingHand) {
+      suitCounts[card.suit] = (suitCounts[card.suit] ?? 0) + 1;
+    }
+    final trumpSuit =
+        suitCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+
+    _debugLog(
+      '[WIDOW EXCHANGE] Auto-discarding: ${discards.map((c) => c.label).join(', ')}',
+    );
+    _debugLog('[WIDOW EXCHANGE] Auto-selecting trump: $trumpSuit');
+
+    performWidowExchange(discards, trumpSuit);
+    // Note: performWidowExchange will call _startPlay(), so we don't call it here
+  }
+
+  // ============================================================================
+  // WIDOW EXCHANGE (Widow Whist)
+  // ============================================================================
+
+  void performWidowExchange(List<PlayingCard> discards, Suit trumpSuit) {
+    if (_state.contractor == null) {
+      _debugLog('ERROR: No contractor for widow exchange');
+      return;
+    }
+
+    _debugLog('[WIDOW EXCHANGE] Discarding ${discards.length} cards');
+    _debugLog('[WIDOW EXCHANGE] Trump declared: $trumpSuit');
+
+    // Remove discarded cards from contractor's hand
+    final contractorHand = _state.getHand(_state.contractor!).toList();
+    _debugLog(
+      '[WIDOW EXCHANGE] Contractor hand size before discard: ${contractorHand.length}',
+    );
+
+    for (final card in discards) {
+      final removed = contractorHand.remove(card);
+      if (!removed) {
+        _debugLog(
+          '⚠️ ERROR: Could not remove ${card.label} from contractor hand - card not found!',
+        );
+      }
+    }
+
+    _debugLog(
+      '[WIDOW EXCHANGE] Contractor hand size after discard: ${contractorHand.length}',
+    );
+
+    // Update state with new hand and trump
+    final sortedHand = sortHandBySuit(contractorHand);
+
+    if (_state.contractor == Position.south) {
+      _updateState(
+        _state.copyWith(
+          playerHand: sortedHand,
+          trumpSuit: trumpSuit,
+          kitty: [], // Clear widow
+        ),
+      );
+    } else if (_state.contractor == Position.north) {
+      _updateState(
+        _state.copyWith(
+          partnerHand: sortedHand,
+          trumpSuit: trumpSuit,
+          kitty: [], // Clear widow
+        ),
+      );
+    } else if (_state.contractor == Position.east) {
+      _updateState(
+        _state.copyWith(
+          opponentEastHand: sortedHand,
+          trumpSuit: trumpSuit,
+          kitty: [], // Clear widow
+        ),
+      );
+    } else if (_state.contractor == Position.west) {
+      _updateState(
+        _state.copyWith(
+          opponentWestHand: sortedHand,
+          trumpSuit: trumpSuit,
+          kitty: [], // Clear widow
+        ),
+      );
+    }
+
+    // Start play
+    Future.delayed(const Duration(milliseconds: 500), _startPlay);
+  }
 
   // ============================================================================
   // PLAY PHASE
@@ -524,7 +1212,9 @@ class GameEngine extends ChangeNotifier {
 
     _debugLog('\n========== START PLAY PHASE (No Bidding) ==========');
     _debugLog('Variant: ${_state.variant.name}');
-    _debugLog('Leader: ${_state.getName(leader)} (${leader.name}) [dealer\'s left]');
+    _debugLog(
+      'Leader: ${_state.getName(leader)} (${leader.name}) [dealer\'s left]',
+    );
     _debugLog('Trump: ${_state.trumpSuit ?? "None"}');
 
     // Sort player's hand by suit
@@ -535,7 +1225,8 @@ class GameEngine extends ChangeNotifier {
         currentPhase: GamePhase.play,
         isPlayPhase: true,
         playerHand: sortedPlayerHand,
-        currentTrick: Trick(plays: [], leader: leader, trumpSuit: _state.trumpSuit),
+        currentTrick:
+            Trick(plays: [], leader: leader, trumpSuit: _state.trumpSuit),
         completedTricks: [],
         tricksWonNS: 0,
         tricksWonEW: 0,
@@ -561,7 +1252,9 @@ class GameEngine extends ChangeNotifier {
     // DEBUG: Verify all hands before play starts
     _debugLog('\n========== START PLAY PHASE ==========');
     _debugLog('Contractor: ${_state.getName(leader)} (${leader.name})');
-    _debugLog('Hand type: ${_state.handType == BidType.high ? "HIGH (Grand)" : "LOW (Nula)"}');
+    _debugLog(
+      'Hand type: ${_state.handType == BidType.high ? "HIGH (Grand)" : "LOW (Nula)"}',
+    );
     _debugLog('All bid low: ${_state.allBidLow}');
     _debugLog('\nHand verification:');
     var totalCards = 0;
@@ -570,9 +1263,14 @@ class GameEngine extends ChangeNotifier {
       totalCards += hand.length;
       _debugLog('${_state.getName(position)}: ${hand.length} cards');
     }
-    _debugLog('Total cards: $totalCards (should be 52)');
-    if (totalCards != 52) {
-      _debugLog('⚠️ WARNING: Card count mismatch!');
+    final expectedCards = _state.variant.tricksPerHand * 4;
+    _debugLog(
+      'Total cards: $totalCards (should be $expectedCards for ${_state.variant.tricksPerHand} tricks)',
+    );
+    if (totalCards != expectedCards) {
+      _debugLog(
+        '⚠️ WARNING: Card count mismatch! Expected $expectedCards, got $totalCards',
+      );
     }
     _debugLog('========================================\n');
 
@@ -716,8 +1414,7 @@ class GameEngine extends ChangeNotifier {
     }
 
     // Validate game state before starting claim
-    final totalCardsRemaining =
-        _state.playerHand.length +
+    final totalCardsRemaining = _state.playerHand.length +
         _state.partnerHand.length +
         _state.opponentEastHand.length +
         _state.opponentWestHand.length;
@@ -754,8 +1451,9 @@ class GameEngine extends ChangeNotifier {
     int outerLoopIterations = 0;
     const maxOuterIterations = 50; // Should never need more than ~15
 
-    // Auto-play through remaining tricks until we have 10
-    while (_state.completedTricks.length < 13) {
+    // Auto-play through remaining tricks until hand is complete
+    final tricksPerHand = _state.variant.tricksPerHand;
+    while (_state.completedTricks.length < tricksPerHand) {
       outerLoopIterations++;
       if (outerLoopIterations > maxOuterIterations) {
         _debugLog('⚠️ ERROR: Claim exceeded max iterations. Aborting.');
@@ -768,15 +1466,16 @@ class GameEngine extends ChangeNotifier {
       }
 
       // Safety check: ensure we still have cards to play
-      final totalCardsRemaining =
-          _state.playerHand.length +
+      final totalCardsRemaining = _state.playerHand.length +
           _state.partnerHand.length +
           _state.opponentEastHand.length +
           _state.opponentWestHand.length;
 
-      if (totalCardsRemaining == 0 && _state.completedTricks.length < 13) {
+      if (totalCardsRemaining == 0 &&
+          _state.completedTricks.length < tricksPerHand) {
         _debugLog(
-            '⚠️ ERROR: No cards remaining but only ${_state.completedTricks.length} tricks completed',);
+          '⚠️ ERROR: No cards remaining but only ${_state.completedTricks.length} tricks completed (expected $tricksPerHand)',
+        );
         _updateState(
           _state.copyWith(
             gameStatus: 'Error during claim - cards exhausted early',
@@ -795,7 +1494,7 @@ class GameEngine extends ChangeNotifier {
           _updateClaimStatus();
           return;
         }
-      } else if (_state.completedTricks.length < 13) {
+      } else if (_state.completedTricks.length < tricksPerHand) {
         // Start a new trick
         // Determine who leads (winner of last trick or current leader)
         Position leader;
@@ -805,15 +1504,19 @@ class GameEngine extends ChangeNotifier {
           // Get winner of last trick
           final trumpRules = TrumpRules(trumpSuit: _state.trumpSuit);
           final trickEngine = TrickEngine(trumpRules: trumpRules);
-          final winner = trickEngine.getCurrentWinner(_state.completedTricks.last);
+          final winner =
+              trickEngine.getCurrentWinner(_state.completedTricks.last);
 
           // Safety check: winner should never be null for a completed trick
           if (winner == null) {
-            _debugLog('⚠️ ERROR: Cannot determine winner of last trick during claim');
+            _debugLog(
+              '⚠️ ERROR: Cannot determine winner of last trick during claim',
+            );
             _debugLog('⚠️ Re-enabling manual play for recovery');
             _updateState(
               _state.copyWith(
-                gameStatus: 'Error: Cannot determine trick winner - continue manually',
+                gameStatus:
+                    'Error: Cannot determine trick winner - continue manually',
               ),
             );
             _updateClaimStatus();
@@ -824,7 +1527,8 @@ class GameEngine extends ChangeNotifier {
         }
 
         _debugLog(
-            'Starting trick ${_state.completedTricks.length + 1}, ${_state.getName(leader)} leads',);
+          'Starting trick ${_state.completedTricks.length + 1}, ${_state.getName(leader)} leads',
+        );
 
         _updateState(
           _state.copyWith(
@@ -893,7 +1597,8 @@ class GameEngine extends ChangeNotifier {
       // Safety: check hand is not empty
       if (hand.isEmpty) {
         _debugLog(
-            '⚠️ ERROR: ${_state.getName(position)} has no cards but trick not complete',);
+          '⚠️ ERROR: ${_state.getName(position)} has no cards but trick not complete',
+        );
         _updateState(
           _state.copyWith(
             gameStatus: 'Error: Player has no cards during claim',
@@ -916,7 +1621,8 @@ class GameEngine extends ChangeNotifier {
       );
 
       _debugLog(
-          '  ${_state.getName(position)} plays ${card.label} (${hand.length} cards in hand)',);
+        '  ${_state.getName(position)} plays ${card.label} (${hand.length} cards in hand)',
+      );
 
       // Play the card
       final result = trickEngine.playCard(
@@ -944,7 +1650,8 @@ class GameEngine extends ChangeNotifier {
       // Safety: verify card was actually in the hand
       if (!wasRemoved) {
         _debugLog(
-            '⚠️ ERROR: Card ${card.label} not found in ${_state.getName(position)} hand',);
+          '⚠️ ERROR: Card ${card.label} not found in ${_state.getName(position)} hand',
+        );
         _updateState(
           _state.copyWith(
             gameStatus: 'Error: Card not found in hand',
@@ -995,7 +1702,9 @@ class GameEngine extends ChangeNotifier {
         final winner = result.winner!;
         final newCompleted = [..._state.completedTricks, result.trick];
 
-        _debugLog('  Trick ${newCompleted.length} won by ${_state.getName(winner)}');
+        _debugLog(
+          '  Trick ${newCompleted.length} won by ${_state.getName(winner)}',
+        );
         _debugLog(
             '  Hand sizes after trick: South=${_state.playerHand.length}, North=${_state.partnerHand.length}, '
             'East=${_state.opponentEastHand.length}, West=${_state.opponentWestHand.length}');
@@ -1034,8 +1743,9 @@ class GameEngine extends ChangeNotifier {
         await Future.delayed(const Duration(milliseconds: 600));
 
         // Check if all tricks complete
-        if (newCompleted.length == 13) {
-          _debugLog('All 13 tricks complete - scoring hand');
+        final tricksPerHand = _state.variant.tricksPerHand;
+        if (newCompleted.length == tricksPerHand) {
+          _debugLog('All $tricksPerHand tricks complete - scoring hand');
           _verifyAllCardsUnique(newCompleted);
           await Future.delayed(const Duration(milliseconds: 1000));
           _scoreHand();
@@ -1046,7 +1756,8 @@ class GameEngine extends ChangeNotifier {
         final winnerHand = _state.getHand(winner);
         if (winnerHand.isEmpty) {
           _debugLog(
-              '⚠️ ERROR: Trick winner ${_state.getName(winner)} has no cards to lead next trick',);
+            '⚠️ ERROR: Trick winner ${_state.getName(winner)} has no cards to lead next trick',
+          );
           _updateState(
             _state.copyWith(
               gameStatus:
@@ -1216,7 +1927,8 @@ class GameEngine extends ChangeNotifier {
     _updateClaimStatus();
 
     // Check if all tricks played
-    if (newCompleted.length == 13) {
+    final tricksPerHand = _state.variant.tricksPerHand;
+    if (newCompleted.length == tricksPerHand) {
       // DEBUG: Verify all cards are unique
       _verifyAllCardsUnique(newCompleted);
 
@@ -1311,22 +2023,91 @@ class GameEngine extends ChangeNotifier {
   void _scoreHand() {
     _debugLog('\n========== SCORING HAND ==========');
     _debugLog('🎮 [VARIANT CHECK] Current variant: ${_state.variant.name}');
-    _debugLog('🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}');
+    _debugLog(
+      '🎮 [VARIANT CHECK] Winning score: ${_state.variant.winningScore}',
+    );
 
     // Get the scoring engine from the current variant
     final scoringEngine = _state.variant.createScoringEngine();
-    _debugLog('🎮 [SCORING] Using scoring engine: ${scoringEngine.runtimeType}');
+    _debugLog(
+      '🎮 [SCORING] Using scoring engine: ${scoringEngine.runtimeType}',
+    );
 
     // For variants with bidding (like Minnesota Whist)
     final grandingTeam = _state.contractor?.team;
-    final tricksWonByGrandingTeam = grandingTeam != null
-        ? _state.getTricksWon(grandingTeam)
-        : null;
+    final tricksWonByGrandingTeam =
+        grandingTeam != null ? _state.getTricksWon(grandingTeam) : null;
 
     // Get tricks for both teams (needed for variants without contractors)
     final nsTeamTricks = _state.getTricksWon(Team.northSouth);
     final ewTeamTricks = _state.getTricksWon(Team.eastWest);
-    _debugLog('🎮 [SCORING] NS tricks: $nsTeamTricks, EW tricks: $ewTeamTricks');
+    _debugLog(
+      '🎮 [SCORING] NS tricks: $nsTeamTricks, EW tricks: $ewTeamTricks',
+    );
+
+    // For Oh Hell, extract individual player bids and tricks
+    final playerBids = <Position, int>{};
+    final playerTricks = <Position, int>{};
+
+    if (_state.variantType == VariantType.ohHell) {
+      // Extract bids from bid history (encoded in Bid objects)
+      for (final entry in _state.bidHistory) {
+        final bid = entry.bid;
+        // Decode the trick count from the rank
+        int tricks;
+        if (bid.bidCard.rank == Rank.two) {
+          tricks = 0; // two = 0 bid
+        } else {
+          tricks = bid.bidCard.rank.index + 1; // ace=1, two=2, etc
+        }
+        playerBids[entry.bidder] = tricks;
+      }
+
+      // Count individual tricks won by each player
+      for (final position in Position.values) {
+        int tricksWon = 0;
+        for (final trick in _state.completedTricks) {
+          if (trick.winner == position) {
+            tricksWon++;
+          }
+        }
+        playerTricks[position] = tricksWon;
+      }
+
+      _debugLog('🎮 [OH HELL] Player bids: $playerBids');
+      _debugLog('🎮 [OH HELL] Player tricks: $playerTricks');
+    }
+
+    // For Widow Whist, extract declarer bid and tricks
+    int? declarerBid;
+    int? declarerTricks;
+    Position? declarer;
+
+    if (_state.variantType == VariantType.widowWhist) {
+      declarer = _state.contractor;
+      if (declarer != null) {
+        // Extract declarer's bid from winning bid
+        final winningBid = _state.winningBid;
+        if (winningBid != null) {
+          // Decode bid: Ace=6, Two=7, ..., King=12
+          declarerBid = winningBid.bidCard.rank.index + 6;
+        }
+
+        // Count declarer's tricks
+        int tricksCount = 0;
+        for (final trick in _state.completedTricks) {
+          if (trick.winner == declarer) {
+            tricksCount++;
+          }
+        }
+        declarerTricks = tricksCount;
+
+        _debugLog('🎮 [WIDOW WHIST] Declarer: ${declarer.name}');
+        _debugLog(
+          '🎮 [WIDOW WHIST] Bid: $declarerBid, Tricks: $declarerTricks',
+        );
+      }
+    }
 
     final handScore = scoringEngine.scoreHand(
       handType: _state.handType,
@@ -1336,6 +2117,11 @@ class GameEngine extends ChangeNotifier {
         'allBidLow': _state.allBidLow,
         'northSouthTricks': nsTeamTricks,
         'eastWestTricks': ewTeamTricks,
+        'playerBids': playerBids,
+        'playerTricks': playerTricks,
+        'declarerBid': declarerBid,
+        'declarerTricks': declarerTricks,
+        'declarer': declarer,
       },
     );
 

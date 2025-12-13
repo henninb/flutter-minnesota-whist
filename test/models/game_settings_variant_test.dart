@@ -69,7 +69,10 @@ void main() {
           selectedVariant: VariantType.bidWhist,
         );
 
-        expect(newSettings.cardSelectionMode, equals(CardSelectionMode.longPress));
+        expect(
+          newSettings.cardSelectionMode,
+          equals(CardSelectionMode.longPress),
+        );
         expect(newSettings.countingMode, equals(CountingMode.automatic));
         expect(newSettings.selectedTheme, equals(ThemeType.summer));
         expect(newSettings.selectedVariant, equals(VariantType.bidWhist));

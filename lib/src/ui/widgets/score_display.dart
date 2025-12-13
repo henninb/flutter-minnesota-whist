@@ -66,7 +66,10 @@ class ScoreDisplay extends StatelessWidget {
               child: VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
             _buildCenterInfo(context),
@@ -75,7 +78,10 @@ class ScoreDisplay extends StatelessWidget {
               child: VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
             Expanded(
@@ -197,7 +203,10 @@ class ScoreDisplay extends StatelessWidget {
                 color: Theme.of(context).colorScheme.tertiaryContainer,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary
+                      .withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -211,7 +220,8 @@ class ScoreDisplay extends StatelessWidget {
             ),
           ],
           // Spacing between dealer and bid/trump
-          if (dealer != null && (winningBid != null || trumpSuit != null)) const SizedBox(height: 12),
+          if (dealer != null && (winningBid != null || trumpSuit != null))
+            const SizedBox(height: 12),
           // Bid info (Minnesota Whist)
           if (winningBid != null) ...[
             Row(
@@ -249,13 +259,18 @@ class ScoreDisplay extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .secondary
+                      .withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withValues(alpha: 0.15),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -305,12 +320,14 @@ class ScoreDisplay extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _getTrumpColor(context, trumpSuit!).withValues(alpha: 0.6),
+                  color: _getTrumpColor(context, trumpSuit!)
+                      .withValues(alpha: 0.6),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _getTrumpColor(context, trumpSuit!).withValues(alpha: 0.15),
+                    color: _getTrumpColor(context, trumpSuit!)
+                        .withValues(alpha: 0.15),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

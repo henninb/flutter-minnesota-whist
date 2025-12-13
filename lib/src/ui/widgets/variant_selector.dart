@@ -73,7 +73,10 @@ class _VariantSelectorState extends State<VariantSelector> {
           ...VariantType.values.map((variant) {
             final isSelected = _selectedVariant == variant;
             final isImplemented = variant == VariantType.minnesotaWhist ||
-                                  variant == VariantType.classicWhist;
+                variant == VariantType.classicWhist ||
+                variant == VariantType.bidWhist ||
+                variant == VariantType.ohHell ||
+                variant == VariantType.widowWhist;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -179,13 +182,10 @@ class _VariantCard extends StatelessWidget {
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected
-                      ? colorScheme.primary
-                      : Colors.transparent,
+                  color: isSelected ? colorScheme.primary : Colors.transparent,
                   border: Border.all(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.outline,
+                    color:
+                        isSelected ? colorScheme.primary : colorScheme.outline,
                     width: 2,
                   ),
                 ),
@@ -229,7 +229,8 @@ class _VariantCard extends StatelessWidget {
                               color: colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: colorScheme.outline.withValues(alpha: 0.3),
+                                color:
+                                    colorScheme.outline.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(

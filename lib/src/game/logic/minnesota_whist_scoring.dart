@@ -35,9 +35,8 @@ class MinnesotaWhistScoring {
       Team.eastWest: 0,
     };
 
-    final opponentTeam = grandingTeam == Team.northSouth
-        ? Team.eastWest
-        : Team.northSouth;
+    final opponentTeam =
+        grandingTeam == Team.northSouth ? Team.eastWest : Team.northSouth;
 
     if (handType == BidType.high) {
       // High (Grand) hand: Need 7+ tricks to score
@@ -98,9 +97,8 @@ class MinnesotaWhistScoring {
     required Map<Team, int> pointsScored,
   }) {
     final tricksWonByOpponents = 13 - tricksWonByGrandingTeam;
-    final opponentTeam = grandingTeam == Team.northSouth
-        ? Team.eastWest
-        : Team.northSouth;
+    final opponentTeam =
+        grandingTeam == Team.northSouth ? Team.eastWest : Team.northSouth;
 
     if (handType == BidType.high) {
       if (tricksWonByGrandingTeam >= 7) {

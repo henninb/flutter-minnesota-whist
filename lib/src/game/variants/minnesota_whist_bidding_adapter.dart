@@ -50,7 +50,9 @@ class MinnesotaWhistBiddingEngineAdapter extends BiddingEngine {
     if (legacyValidation.isValid) {
       return BidValidation.valid();
     } else {
-      return BidValidation.invalid(legacyValidation.errorMessage ?? 'Invalid bid');
+      return BidValidation.invalid(
+        legacyValidation.errorMessage ?? 'Invalid bid',
+      );
     }
   }
 

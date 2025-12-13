@@ -6,12 +6,14 @@ import '../logic/scoring_engine.dart';
 import '../variants/variant_type.dart';
 import '../variants/game_variant.dart';
 
-/// Game phases for Minnesota Whist
+/// Game phases
 enum GamePhase {
   setup, // Initial state
   cutForDeal, // Players cut deck to determine dealer
   dealing, // Dealing cards
-  bidding, // Simultaneous card placement (high/low)
+  bidding, // Bidding phase
+  kittyExchange, // Bid winner exchanges cards with kitty (Bid Whist)
+  trumpDeclaration, // Bid winner declares trump (Bid Whist)
   play, // Playing tricks
   scoring, // Scoring completed hand
   gameOver, // Game finished
@@ -24,7 +26,8 @@ class GameState {
     // Game setup
     this.gameStarted = false,
     this.currentPhase = GamePhase.setup,
-    this.dealer = Position.west, // Default dealer (player is South, dealer rotates)
+    this.dealer =
+        Position.west, // Default dealer (player is South, dealer rotates)
     this.handNumber = 0,
     // Variant
     this.variantType = VariantType.minnesotaWhist,
@@ -47,6 +50,7 @@ class GameState {
     this.partnerHand = const [], // North
     this.opponentWestHand = const [],
     this.opponentEastHand = const [],
+    this.kitty = const [], // Special cards (Bid Whist kitty, etc.)
     // Bidding phase
     this.isBiddingPhase = false,
     this.bidHistory = const [],
@@ -98,7 +102,8 @@ class GameState {
   // Cut for deal
   final List<PlayingCard> cutDeck; // Spread deck shown to player for cutting
   final Map<Position, PlayingCard> cutCards; // Cards drawn during cut for deal
-  final bool playerHasSelectedCutCard; // Whether player has tapped a card from spread deck
+  final bool
+      playerHasSelectedCutCard; // Whether player has tapped a card from spread deck
 
   // Scores
   final int teamNorthSouthScore;
@@ -117,6 +122,7 @@ class GameState {
   final List<PlayingCard> partnerHand; // North
   final List<PlayingCard> opponentWestHand; // West
   final List<PlayingCard> opponentEastHand; // East
+  final List<PlayingCard> kitty; // Special cards (kitty, widow, etc.)
 
   // Bidding phase
   final bool isBiddingPhase;
@@ -138,7 +144,8 @@ class GameState {
   final int tricksWonEW; // East-West team
 
   // UI state
-  final Set<int> selectedCardIndices; // For bid card selection - indices of selected cards
+  final Set<int>
+      selectedCardIndices; // For bid card selection - indices of selected cards
   final String gameStatus;
   final bool showGameOverDialog;
   final GameOverData? gameOverData;
@@ -146,8 +153,10 @@ class GameState {
   final bool showBiddingDialog;
   final BidEntry? pendingBidEntry; // Last bid that was made (for display)
   final Position? aiThinkingPosition; // Show "thinking" indicator
-  final PlayingCard? pendingBidCard; // Card selected for bidding (before reveal)
-  final bool canPlayerClaimRemainingTricks; // True if player can guarantee winning all remaining tricks
+  final PlayingCard?
+      pendingBidCard; // Card selected for bidding (before reveal)
+  final bool
+      canPlayerClaimRemainingTricks; // True if player can guarantee winning all remaining tricks
 
   // Variant UI fields
   final List<PlayingCard>? specialCards; // Kitty, widow, etc.
@@ -224,6 +233,7 @@ class GameState {
     List<PlayingCard>? partnerHand,
     List<PlayingCard>? opponentWestHand,
     List<PlayingCard>? opponentEastHand,
+    List<PlayingCard>? kitty,
     bool? isBiddingPhase,
     List<BidEntry>? bidHistory,
     Position? currentBidder,
@@ -279,7 +289,8 @@ class GameState {
       variantType: variantType ?? this.variantType,
       cutDeck: cutDeck ?? this.cutDeck,
       cutCards: cutCards ?? this.cutCards,
-      playerHasSelectedCutCard: playerHasSelectedCutCard ?? this.playerHasSelectedCutCard,
+      playerHasSelectedCutCard:
+          playerHasSelectedCutCard ?? this.playerHasSelectedCutCard,
       teamNorthSouthScore: teamNorthSouthScore ?? this.teamNorthSouthScore,
       teamEastWestScore: teamEastWestScore ?? this.teamEastWestScore,
       gamesWon: gamesWon ?? this.gamesWon,
@@ -292,32 +303,48 @@ class GameState {
       partnerHand: partnerHand ?? this.partnerHand,
       opponentWestHand: opponentWestHand ?? this.opponentWestHand,
       opponentEastHand: opponentEastHand ?? this.opponentEastHand,
+      kitty: kitty ?? this.kitty,
       isBiddingPhase: isBiddingPhase ?? this.isBiddingPhase,
       bidHistory: bidHistory ?? this.bidHistory,
-      currentBidder: clearCurrentBidder ? null : (currentBidder ?? this.currentBidder),
-      currentHighBid: clearCurrentHighBid ? null : (currentHighBid ?? this.currentHighBid),
+      currentBidder:
+          clearCurrentBidder ? null : (currentBidder ?? this.currentBidder),
+      currentHighBid:
+          clearCurrentHighBid ? null : (currentHighBid ?? this.currentHighBid),
       winningBid: clearWinningBid ? null : (winningBid ?? this.winningBid),
       contractor: clearContractor ? null : (contractor ?? this.contractor),
       handType: clearHandType ? null : (handType ?? this.handType),
       allBidLow: allBidLow ?? this.allBidLow,
       isPlayPhase: isPlayPhase ?? this.isPlayPhase,
       trumpSuit: clearTrumpSuit ? null : (trumpSuit ?? this.trumpSuit),
-      currentTrick: clearCurrentTrick ? null : (currentTrick ?? this.currentTrick),
+      currentTrick:
+          clearCurrentTrick ? null : (currentTrick ?? this.currentTrick),
       completedTricks: completedTricks ?? this.completedTricks,
-      currentPlayer: clearCurrentPlayer ? null : (currentPlayer ?? this.currentPlayer),
+      currentPlayer:
+          clearCurrentPlayer ? null : (currentPlayer ?? this.currentPlayer),
       tricksWonNS: tricksWonNS ?? this.tricksWonNS,
       tricksWonEW: tricksWonEW ?? this.tricksWonEW,
-      selectedCardIndices: clearSelectedCardIndices ? {} : (selectedCardIndices ?? this.selectedCardIndices),
+      selectedCardIndices: clearSelectedCardIndices
+          ? {}
+          : (selectedCardIndices ?? this.selectedCardIndices),
       gameStatus: gameStatus ?? this.gameStatus,
       showGameOverDialog: showGameOverDialog ?? this.showGameOverDialog,
-      gameOverData: clearGameOverData ? null : (gameOverData ?? this.gameOverData),
-      scoreAnimation: clearScoreAnimation ? null : (scoreAnimation ?? this.scoreAnimation),
+      gameOverData:
+          clearGameOverData ? null : (gameOverData ?? this.gameOverData),
+      scoreAnimation:
+          clearScoreAnimation ? null : (scoreAnimation ?? this.scoreAnimation),
       showBiddingDialog: showBiddingDialog ?? this.showBiddingDialog,
-      pendingBidEntry: clearPendingBidEntry ? null : (pendingBidEntry ?? this.pendingBidEntry),
-      aiThinkingPosition: clearAiThinkingPosition ? null : (aiThinkingPosition ?? this.aiThinkingPosition),
-      pendingBidCard: clearPendingBidCard ? null : (pendingBidCard ?? this.pendingBidCard),
-      canPlayerClaimRemainingTricks: canPlayerClaimRemainingTricks ?? this.canPlayerClaimRemainingTricks,
-      specialCards: clearSpecialCards ? null : (specialCards ?? this.specialCards),
+      pendingBidEntry: clearPendingBidEntry
+          ? null
+          : (pendingBidEntry ?? this.pendingBidEntry),
+      aiThinkingPosition: clearAiThinkingPosition
+          ? null
+          : (aiThinkingPosition ?? this.aiThinkingPosition),
+      pendingBidCard:
+          clearPendingBidCard ? null : (pendingBidCard ?? this.pendingBidCard),
+      canPlayerClaimRemainingTricks:
+          canPlayerClaimRemainingTricks ?? this.canPlayerClaimRemainingTricks,
+      specialCards:
+          clearSpecialCards ? null : (specialCards ?? this.specialCards),
       specialCardsLabel: specialCardsLabel ?? this.specialCardsLabel,
       specialCardsRevealed: specialCardsRevealed ?? this.specialCardsRevealed,
       trumpRevealed: trumpRevealed ?? this.trumpRevealed,

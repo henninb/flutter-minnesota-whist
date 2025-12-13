@@ -225,7 +225,8 @@ List<PlayingCard> _sortByNaturalSuit(List<PlayingCard> hand) {
   sorted.sort((a, b) {
     // Sort by suit (Spades, Hearts, Diamonds, Clubs)
     final suitOrder = [Suit.spades, Suit.hearts, Suit.diamonds, Suit.clubs];
-    final suitCompare = suitOrder.indexOf(a.suit).compareTo(suitOrder.indexOf(b.suit));
+    final suitCompare =
+        suitOrder.indexOf(a.suit).compareTo(suitOrder.indexOf(b.suit));
     if (suitCompare != 0) return suitCompare;
 
     // Within same suit, sort by rank (Ace high to 2 low)
@@ -257,16 +258,21 @@ List<PlayingCard> _sortWithTrump(List<PlayingCard> hand, Suit trumpSuit) {
   // Helper: Get same-color suit
   Suit getOppositeColorSuit(Suit suit) {
     switch (suit) {
-      case Suit.hearts: return Suit.diamonds;
-      case Suit.diamonds: return Suit.hearts;
-      case Suit.spades: return Suit.clubs;
-      case Suit.clubs: return Suit.spades;
+      case Suit.hearts:
+        return Suit.diamonds;
+      case Suit.diamonds:
+        return Suit.hearts;
+      case Suit.spades:
+        return Suit.clubs;
+      case Suit.clubs:
+        return Suit.spades;
     }
   }
 
   // Helper: Check if card is left bower
   bool isLeftBower(PlayingCard card) {
-    return card.rank == Rank.jack && card.suit == getOppositeColorSuit(trumpSuit);
+    return card.rank == Rank.jack &&
+        card.suit == getOppositeColorSuit(trumpSuit);
   }
 
   // Helper: Check if card is right bower
@@ -286,19 +292,32 @@ List<PlayingCard> _sortWithTrump(List<PlayingCard> hand, Suit trumpSuit) {
     if (isRightBower(card)) return 99;
     if (isLeftBower(card)) return 98;
     switch (card.rank) {
-      case Rank.ace: return 14;
-      case Rank.king: return 13;
-      case Rank.queen: return 12;
-      case Rank.ten: return 11;
-      case Rank.nine: return 10;
-      case Rank.eight: return 9;
-      case Rank.seven: return 8;
-      case Rank.six: return 7;
-      case Rank.five: return 6;
-      case Rank.four: return 5;
-      case Rank.three: return 4;
-      case Rank.two: return 3;
-      default: return 0;
+      case Rank.ace:
+        return 14;
+      case Rank.king:
+        return 13;
+      case Rank.queen:
+        return 12;
+      case Rank.ten:
+        return 11;
+      case Rank.nine:
+        return 10;
+      case Rank.eight:
+        return 9;
+      case Rank.seven:
+        return 8;
+      case Rank.six:
+        return 7;
+      case Rank.five:
+        return 6;
+      case Rank.four:
+        return 5;
+      case Rank.three:
+        return 4;
+      case Rank.two:
+        return 3;
+      default:
+        return 0;
     }
   }
 
@@ -317,7 +336,8 @@ List<PlayingCard> _sortWithTrump(List<PlayingCard> hand, Suit trumpSuit) {
 
     // Both non-trump: sort by suit then rank
     final suitOrder = [Suit.spades, Suit.hearts, Suit.diamonds, Suit.clubs];
-    final suitCompare = suitOrder.indexOf(a.suit).compareTo(suitOrder.indexOf(b.suit));
+    final suitCompare =
+        suitOrder.indexOf(a.suit).compareTo(suitOrder.indexOf(b.suit));
     if (suitCompare != 0) return suitCompare;
 
     // Within same suit, sort by rank (Ace high to 2 low)

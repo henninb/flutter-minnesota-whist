@@ -26,7 +26,9 @@ class MinnesotaWhistScorer {
   }) {
     if (kDebugMode) {
       debugPrint('\n[SCORER] Scoring Minnesota Whist hand');
-      debugPrint('  Hand type: ${handType == BidType.high ? "HIGH (Grand)" : "LOW (Nula)"}');
+      debugPrint(
+        '  Hand type: ${handType == BidType.high ? "HIGH (Grand)" : "LOW (Nula)"}',
+      );
       debugPrint('  Granding team: ${_teamName(grandingTeam)}');
       debugPrint('  Tricks won by granding team: $tricksWonByGrandingTeam');
       debugPrint('  All bid low: $allBidLow');
@@ -42,9 +44,8 @@ class MinnesotaWhistScorer {
       throw ArgumentError(error);
     }
 
-    final opponentTeam = grandingTeam == Team.northSouth
-        ? Team.eastWest
-        : Team.northSouth;
+    final opponentTeam =
+        grandingTeam == Team.northSouth ? Team.eastWest : Team.northSouth;
 
     int teamNSPoints = 0;
     int teamEWPoints = 0;
@@ -57,20 +58,24 @@ class MinnesotaWhistScorer {
       if (grandingTeam == Team.northSouth) {
         if (tricksWonByGrandingTeam > tricksWonByOpponents) {
           teamNSPoints = -(tricksWonByGrandingTeam - 6);
-          resultDescription = 'All bid LOW. North-South took $tricksWonByGrandingTeam tricks and loses ${-teamNSPoints} points';
+          resultDescription =
+              'All bid LOW. North-South took $tricksWonByGrandingTeam tricks and loses ${-teamNSPoints} points';
         } else if (tricksWonByOpponents > tricksWonByGrandingTeam) {
           teamEWPoints = -(tricksWonByOpponents - 6);
-          resultDescription = 'All bid LOW. East-West took $tricksWonByOpponents tricks and loses ${-teamEWPoints} points';
+          resultDescription =
+              'All bid LOW. East-West took $tricksWonByOpponents tricks and loses ${-teamEWPoints} points';
         } else {
           resultDescription = 'All bid LOW. Tied 6-6, no points scored';
         }
       } else {
         if (tricksWonByOpponents > tricksWonByGrandingTeam) {
           teamNSPoints = -(tricksWonByOpponents - 6);
-          resultDescription = 'All bid LOW. North-South took $tricksWonByOpponents tricks and loses ${-teamNSPoints} points';
+          resultDescription =
+              'All bid LOW. North-South took $tricksWonByOpponents tricks and loses ${-teamNSPoints} points';
         } else if (tricksWonByGrandingTeam > tricksWonByOpponents) {
           teamEWPoints = -(tricksWonByGrandingTeam - 6);
-          resultDescription = 'All bid LOW. East-West took $tricksWonByGrandingTeam tricks and loses ${-teamEWPoints} points';
+          resultDescription =
+              'All bid LOW. East-West took $tricksWonByGrandingTeam tricks and loses ${-teamEWPoints} points';
         } else {
           resultDescription = 'All bid LOW. Tied 6-6, no points scored';
         }
@@ -86,7 +91,8 @@ class MinnesotaWhistScorer {
         } else {
           teamEWPoints = points;
         }
-        resultDescription = '${_teamName(grandingTeam)} granded HIGH and won $tricksWonByGrandingTeam tricks (+$points)';
+        resultDescription =
+            '${_teamName(grandingTeam)} granded HIGH and won $tricksWonByGrandingTeam tricks (+$points)';
       } else {
         // Opponents won - they score 2 points per trick over 6
         final points = (tricksWonByOpponents - 6) * 2;
@@ -95,7 +101,8 @@ class MinnesotaWhistScorer {
         } else {
           teamEWPoints = points;
         }
-        resultDescription = '${_teamName(grandingTeam)} granded HIGH but only won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points (×2)';
+        resultDescription =
+            '${_teamName(grandingTeam)} granded HIGH but only won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points (×2)';
       }
     } else {
       // Low (Nula) hand
@@ -108,7 +115,8 @@ class MinnesotaWhistScorer {
         } else {
           teamEWPoints = points;
         }
-        resultDescription = '${_teamName(grandingTeam)} granded LOW and won only $tricksWonByGrandingTeam tricks (+$points)';
+        resultDescription =
+            '${_teamName(grandingTeam)} granded LOW and won only $tricksWonByGrandingTeam tricks (+$points)';
       } else {
         // Granding team failed - opponents score
         final points = 7 - tricksWonByOpponents;
@@ -117,13 +125,18 @@ class MinnesotaWhistScorer {
         } else {
           teamEWPoints = points;
         }
-        resultDescription = '${_teamName(grandingTeam)} granded LOW but won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points';
+        resultDescription =
+            '${_teamName(grandingTeam)} granded LOW but won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points';
       }
     }
 
     if (kDebugMode) {
-      debugPrint('  Team North-South points: ${teamNSPoints > 0 ? "+$teamNSPoints" : teamNSPoints}');
-      debugPrint('  Team East-West points: ${teamEWPoints > 0 ? "+$teamEWPoints" : teamEWPoints}');
+      debugPrint(
+        '  Team North-South points: ${teamNSPoints > 0 ? "+$teamNSPoints" : teamNSPoints}',
+      );
+      debugPrint(
+        '  Team East-West points: ${teamEWPoints > 0 ? "+$teamEWPoints" : teamEWPoints}',
+      );
       debugPrint('  $resultDescription');
     }
 
@@ -155,12 +168,16 @@ class MinnesotaWhistScorer {
       // Both teams reached winning score - highest score wins
       if (teamNSScore > teamEWScore) {
         if (kDebugMode) {
-          debugPrint('  GAME OVER: Both teams reached $winningScore+, North-South wins ($teamNSScore > $teamEWScore)');
+          debugPrint(
+            '  GAME OVER: Both teams reached $winningScore+, North-South wins ($teamNSScore > $teamEWScore)',
+          );
         }
         return GameOverStatus.teamNSWins;
       } else {
         if (kDebugMode) {
-          debugPrint('  GAME OVER: Both teams reached $winningScore+, East-West wins ($teamEWScore > $teamNSScore)');
+          debugPrint(
+            '  GAME OVER: Both teams reached $winningScore+, East-West wins ($teamEWScore > $teamNSScore)',
+          );
         }
         return GameOverStatus.teamEWWins;
       }
@@ -168,14 +185,18 @@ class MinnesotaWhistScorer {
 
     if (teamNSScore >= winningScore) {
       if (kDebugMode) {
-        debugPrint('  GAME OVER: North-South reaches $winningScore+ ($teamNSScore)');
+        debugPrint(
+          '  GAME OVER: North-South reaches $winningScore+ ($teamNSScore)',
+        );
       }
       return GameOverStatus.teamNSWins;
     }
 
     if (teamEWScore >= winningScore) {
       if (kDebugMode) {
-        debugPrint('  GAME OVER: East-West reaches $winningScore+ ($teamEWScore)');
+        debugPrint(
+          '  GAME OVER: East-West reaches $winningScore+ ($teamEWScore)',
+        );
       }
       return GameOverStatus.teamEWWins;
     }
@@ -188,7 +209,11 @@ class MinnesotaWhistScorer {
   }
 
   /// Get game over message
-  static String getGameOverMessage(GameOverStatus status, int scoreNS, int scoreEW) {
+  static String getGameOverMessage(
+    GameOverStatus status,
+    int scoreNS,
+    int scoreEW,
+  ) {
     switch (status) {
       case GameOverStatus.teamNSWins:
         return 'Team North-South wins! Final score: $scoreNS to $scoreEW';
@@ -213,8 +238,10 @@ class HandScore {
     required this.description,
   });
 
-  final int teamNSPoints; // Points scored by North-South (can be negative in all-low)
-  final int teamEWPoints; // Points scored by East-West (can be negative in all-low)
+  final int
+      teamNSPoints; // Points scored by North-South (can be negative in all-low)
+  final int
+      teamEWPoints; // Points scored by East-West (can be negative in all-low)
   final bool grandingTeamSucceeded;
   final int tricksWonByGrandingTeam;
   final int tricksWonByOpponents;

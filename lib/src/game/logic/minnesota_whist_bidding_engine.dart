@@ -69,7 +69,9 @@ class MinnesotaWhistBiddingEngine {
   /// black card is found (that player "granded").
   AuctionResult determineWinner(List<BidEntry> bids) {
     if (kDebugMode) {
-      debugPrint('\n[BIDDING ENGINE] Determining Minnesota Whist auction winner');
+      debugPrint(
+        '\n[BIDDING ENGINE] Determining Minnesota Whist auction winner',
+      );
       debugPrint('  Total bids received: ${bids.length}');
     }
 
@@ -97,7 +99,9 @@ class MinnesotaWhistBiddingEngine {
       revealedBids[position] = bid;
 
       if (kDebugMode) {
-        debugPrint('  Revealing ${position.name}: ${bid.bidType == BidType.high ? "BLACK (High)" : "RED (Low)"}');
+        debugPrint(
+          '  Revealing ${position.name}: ${bid.bidType == BidType.high ? "BLACK (High)" : "RED (Low)"}',
+        );
       }
 
       // If black card, this player granded - stop revealing
@@ -195,7 +199,8 @@ class AuctionResult {
   final Bid? winningBid;
   final BidType handType; // Whether it's a HIGH or LOW hand
   final String message;
-  final Map<Position, Bid>? revealedBids; // Which bids were revealed before stopping
+  final Map<Position, Bid>?
+      revealedBids; // Which bids were revealed before stopping
   final bool allBidLow; // True if all 4 players bid red (special case)
 
   Position? get winner => winningBid?.bidder;

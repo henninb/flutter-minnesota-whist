@@ -19,10 +19,14 @@ class MinnesotaWhistScoringEngineAdapter extends ScoringEngine {
       throw ArgumentError('handType is required for Minnesota Whist scoring');
     }
     if (contractingTeam == null) {
-      throw ArgumentError('contractingTeam (granding team) is required for Minnesota Whist scoring');
+      throw ArgumentError(
+        'contractingTeam (granding team) is required for Minnesota Whist scoring',
+      );
     }
     if (tricksWonByContractingTeam == null) {
-      throw ArgumentError('tricksWonByContractingTeam is required for Minnesota Whist scoring');
+      throw ArgumentError(
+        'tricksWonByContractingTeam is required for Minnesota Whist scoring',
+      );
     }
 
     // Extract Minnesota Whist specific parameter
@@ -55,10 +59,12 @@ class MinnesotaWhistScoringEngineAdapter extends ScoringEngine {
     required int teamEWScore,
     int? winningScore,
   }) {
-    final legacy.GameOverStatus? legacyStatus = legacy.MinnesotaWhistScorer.checkGameOver(
+    final legacy.GameOverStatus? legacyStatus =
+        legacy.MinnesotaWhistScorer.checkGameOver(
       teamNSScore: teamNSScore,
       teamEWScore: teamEWScore,
-      winningScore: winningScore ?? legacy.MinnesotaWhistScorer.defaultWinningScore,
+      winningScore:
+          winningScore ?? legacy.MinnesotaWhistScorer.defaultWinningScore,
     );
 
     if (legacyStatus == null) {
@@ -95,5 +101,6 @@ class MinnesotaWhistScoringEngineAdapter extends ScoringEngine {
   }
 
   /// Get the default winning score for Minnesota Whist
-  static int get defaultWinningScore => legacy.MinnesotaWhistScorer.defaultWinningScore;
+  static int get defaultWinningScore =>
+      legacy.MinnesotaWhistScorer.defaultWinningScore;
 }

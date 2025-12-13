@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../game/engine/game_state.dart';
-import '../../game/models/game_models.dart';
 
 /// Simplified action bar for Minnesota Whist
 class ActionBar extends StatelessWidget {

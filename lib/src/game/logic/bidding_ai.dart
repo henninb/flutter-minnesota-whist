@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../models/card.dart';
@@ -29,7 +28,9 @@ class BiddingAI {
     final handStrength = _evaluateHandStrength(hand);
 
     if (kDebugMode) {
-      debugPrint('[AI BIDDING] ${position.name}: Estimated tricks = ${handStrength.toStringAsFixed(1)}');
+      debugPrint(
+        '[AI BIDDING] ${position.name}: Estimated tricks = ${handStrength.toStringAsFixed(1)}',
+      );
     }
 
     // Decide high or low based on strength
@@ -37,8 +38,12 @@ class BiddingAI {
     final bidHigh = handStrength >= 7.0;
 
     // Get cards of the chosen color
-    final blackCards = hand.where((c) => c.suit == Suit.spades || c.suit == Suit.clubs).toList();
-    final redCards = hand.where((c) => c.suit == Suit.hearts || c.suit == Suit.diamonds).toList();
+    final blackCards = hand
+        .where((c) => c.suit == Suit.spades || c.suit == Suit.clubs)
+        .toList();
+    final redCards = hand
+        .where((c) => c.suit == Suit.hearts || c.suit == Suit.diamonds)
+        .toList();
 
     PlayingCard bidCard;
 
@@ -48,12 +53,16 @@ class BiddingAI {
         // No black cards - use lowest red card (forced to bid low)
         bidCard = _getLowestCard(redCards);
         if (kDebugMode) {
-          debugPrint('[AI BIDDING] ${position.name}: Want HIGH but no black cards, bidding LOW with ${bidCard.label}');
+          debugPrint(
+            '[AI BIDDING] ${position.name}: Want HIGH but no black cards, bidding LOW with ${bidCard.label}',
+          );
         }
       } else {
         bidCard = _getLowestCard(blackCards);
         if (kDebugMode) {
-          debugPrint('[AI BIDDING] ${position.name}: Bidding HIGH with ${bidCard.label} (${handStrength.toStringAsFixed(1)} tricks)');
+          debugPrint(
+            '[AI BIDDING] ${position.name}: Bidding HIGH with ${bidCard.label} (${handStrength.toStringAsFixed(1)} tricks)',
+          );
         }
       }
     } else {
@@ -62,12 +71,16 @@ class BiddingAI {
         // No red cards - use lowest black card (forced to bid high)
         bidCard = _getLowestCard(blackCards);
         if (kDebugMode) {
-          debugPrint('[AI BIDDING] ${position.name}: Want LOW but no red cards, bidding HIGH with ${bidCard.label}');
+          debugPrint(
+            '[AI BIDDING] ${position.name}: Want LOW but no red cards, bidding HIGH with ${bidCard.label}',
+          );
         }
       } else {
         bidCard = _getLowestCard(redCards);
         if (kDebugMode) {
-          debugPrint('[AI BIDDING] ${position.name}: Bidding LOW with ${bidCard.label} (${handStrength.toStringAsFixed(1)} tricks)');
+          debugPrint(
+            '[AI BIDDING] ${position.name}: Bidding LOW with ${bidCard.label} (${handStrength.toStringAsFixed(1)} tricks)',
+          );
         }
       }
     }
@@ -82,7 +95,9 @@ class BiddingAI {
     // Count high cards by suit
     for (final suit in Suit.values) {
       final suitCards = hand.where((c) => c.suit == suit).toList()
-        ..sort((a, b) => b.rank.index.compareTo(a.rank.index)); // Sort high to low
+        ..sort(
+          (a, b) => b.rank.index.compareTo(a.rank.index),
+        ); // Sort high to low
 
       if (suitCards.isEmpty) continue;
 

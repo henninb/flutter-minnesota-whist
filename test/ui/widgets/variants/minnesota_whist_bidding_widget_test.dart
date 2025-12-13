@@ -14,11 +14,11 @@ void main() {
 
     setUp(() {
       playerHand = [
-        PlayingCard(rank: Rank.ace, suit: Suit.spades),   // Black (High)
-        PlayingCard(rank: Rank.two, suit: Suit.spades),   // Black (High)
-        PlayingCard(rank: Rank.king, suit: Suit.hearts),  // Red (Low)
+        PlayingCard(rank: Rank.ace, suit: Suit.spades), // Black (High)
+        PlayingCard(rank: Rank.two, suit: Suit.spades), // Black (High)
+        PlayingCard(rank: Rank.king, suit: Suit.hearts), // Red (Low)
         PlayingCard(rank: Rank.three, suit: Suit.hearts), // Red (Low)
-        PlayingCard(rank: Rank.queen, suit: Suit.clubs),  // Black (High)
+        PlayingCard(rank: Rank.queen, suit: Suit.clubs), // Black (High)
         PlayingCard(rank: Rank.jack, suit: Suit.diamonds), // Red (Low)
       ];
 
