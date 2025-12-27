@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../game/models/card.dart';
 import '../../game/models/game_models.dart';
+import 'playing_card_widget.dart';
 
 /// Displays the current trick with cards arranged in a cross pattern (N/S/E/W).
 ///
@@ -123,49 +124,15 @@ class TrickArea extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         width: cardWidth,
         height: cardHeight,
-        child: Card(
-          elevation: isWinning ? 12 : 4,
-          color: isWinning
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: isWinning
-                ? BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 3,
-                  )
-                : BorderSide.none,
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Card label
-                Text(
-                  play.card.label,
-                  style: TextStyle(
-                    fontSize: cardWidth * 0.25,
-                    fontWeight: isWinning ? FontWeight.bold : FontWeight.normal,
-                    color: _getCardColor(play.card.label),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                // Player position label
-                const SizedBox(height: 2),
-                Text(
-                  play.player.name[0].toUpperCase(),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withAlpha(128),
-                        fontSize: cardWidth * 0.12,
-                      ),
-                ),
-              ],
-            ),
-          ),
+        child: PlayingCardWidget(
+          card: play.card,
+          width: cardWidth,
+          height: cardHeight,
+          isSelected: false,
+          isPeeking: false,
+          isWinning: isWinning,
+          positionLabel: play.player.name[0].toUpperCase(), // N/S/E/W
+          onTap: null, // Cards in trick are not interactive
         ),
       ),
     );
@@ -182,13 +149,5 @@ class TrickArea extends StatelessWidget {
       case Suit.clubs:
         return '♣';
     }
-  }
-
-  Color _getCardColor(String label) {
-    // Red for hearts and diamonds, black for clubs and spades
-    if (label.contains('♥') || label.contains('♦')) {
-      return Colors.red.shade800;
-    }
-    return Colors.black;
   }
 }

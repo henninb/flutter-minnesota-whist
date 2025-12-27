@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../game/models/card.dart';
 import '../../game/engine/game_state.dart';
+import 'playing_card_widget.dart';
 
 /// Displays the player's hand of cards with tap interaction support.
 ///
@@ -125,14 +126,6 @@ class _HandDisplayState extends State<HandDisplay> {
     final bool isSelected = widget.selectedIndices.contains(index);
     final bool isPeeking = _peekingCardIndex == index;
 
-    // Determine card color
-    Color cardColor;
-    Color textColor;
-
-    // Minnesota Whist: No kitty exchange, cards are white when not selected
-    cardColor = Colors.white;
-    textColor = _getCardColor(card.label);
-
     // Calculate vertical offset - selected cards and peeking cards lift up
     double yOffset = 0;
     if (isSelected) {
@@ -144,79 +137,42 @@ class _HandDisplayState extends State<HandDisplay> {
     final cardWidget = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       transform: yOffset != 0 ? Matrix4.translationValues(0, yOffset, 0) : null,
-      child: Card(
-        color: cardColor,
-        elevation: isPeeking ? 16 : (isSelected ? 12 : 3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: isSelected
-              ? BorderSide(
-                  color: Theme.of(context).colorScheme.error,
-                  width: 2,
-                )
-              : (isPeeking
-                  ? BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    )
-                  : BorderSide.none),
-        ),
-        child: Container(
-          width: 60,
-          height: 84,
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: Text(
-              card.label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isSelected || isPeeking
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-                color: textColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+      child: PlayingCardWidget(
+        card: card,
+        width: 60,
+        height: 84,
+        isSelected: isSelected,
+        isPeeking: isPeeking,
+        isWinning: false,
+        positionLabel: null,
+        // Gesture handling for peeking
+        onTapDown: widget.allowPeek
+            ? (_) {
+                setState(() {
+                  _peekingCardIndex = index;
+                });
+              }
+            : null,
+        onTapUp: widget.allowPeek
+            ? (_) {
+                setState(() {
+                  _peekingCardIndex = null;
+                });
+              }
+            : null,
+        onTapCancel: widget.allowPeek
+            ? () {
+                setState(() {
+                  _peekingCardIndex = null;
+                });
+              }
+            : null,
+        onTap: !widget.allowPeek && widget.enabled
+            ? () => widget.onCardTap(index)
+            : null,
       ),
     );
 
-    // If peek mode is enabled, use GestureDetector for press detection
-    if (widget.allowPeek) {
-      return GestureDetector(
-        onTapDown: (_) {
-          setState(() {
-            _peekingCardIndex = index;
-          });
-        },
-        onTapUp: (_) {
-          setState(() {
-            _peekingCardIndex = null;
-          });
-        },
-        onTapCancel: () {
-          setState(() {
-            _peekingCardIndex = null;
-          });
-        },
-        child: cardWidget,
-      );
-    }
-
-    // Otherwise, use InkWell for normal tap behavior
-    return InkWell(
-      onTap: widget.enabled ? () => widget.onCardTap(index) : null,
-      borderRadius: BorderRadius.circular(8),
-      child: cardWidget,
-    );
-  }
-
-  Color _getCardColor(String label) {
-    // Red for hearts and diamonds, black for clubs and spades
-    if (label.contains('♥') || label.contains('♦')) {
-      return Colors.red.shade800;
-    }
-    return Colors.black;
+    return cardWidget;
   }
 }

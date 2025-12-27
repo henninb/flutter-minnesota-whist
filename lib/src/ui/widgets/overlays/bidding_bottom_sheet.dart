@@ -93,10 +93,14 @@ class _BiddingBottomSheetState extends State<BiddingBottomSheet> {
                       ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                tooltip: 'Bidding Help',
-                onPressed: () => _showBiddingHelp(context),
+              Tooltip(
+                message: '♠♣ Black = HIGH (win tricks)\n♥♦ Red = LOW (lose tricks)\n\nUse your lowest card!',
+                preferBelow: false,
+                child: IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  tooltip: '', // Handled by Tooltip widget
+                  onPressed: () => _showBiddingHelp(context),
+                ),
               ),
             ],
           ),

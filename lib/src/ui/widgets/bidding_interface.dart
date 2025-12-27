@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../game/models/card.dart';
 import '../../game/models/game_models.dart';
+import 'playing_card_widget.dart';
 
 /// Minnesota Whist bidding interface
 ///
@@ -42,163 +43,93 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Separate cards by color
-    final blackCards = widget.playerHand.where(_isBlackCard).toList()
+    // Separate cards by color and get only the lowest from each
+    final allBlackCards = widget.playerHand.where(_isBlackCard).toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
+    final blackCards = allBlackCards.isNotEmpty ? [allBlackCards.first] : <PlayingCard>[];
 
-    final redCards = widget.playerHand.where((c) => !_isBlackCard(c)).toList()
+    final allRedCards = widget.playerHand.where((c) => !_isBlackCard(c)).toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
+    final redCards = allRedCards.isNotEmpty ? [allRedCards.first] : <PlayingCard>[];
 
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 16),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
 
-          // Instructions
+        // Compact selection display
+        if (widget.selectedCard != null) ...[
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              color: colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.3),
+                color: colorScheme.secondary.withValues(alpha: 0.5),
               ),
             ),
-            child: Column(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Select a card to place your bid:',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
+                Icon(
+                  Icons.check_circle_outline,
+                  color: colorScheme.onSecondaryContainer,
+                  size: 18,
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const SizedBox(width: 28),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '♠♣ Black = HIGH (win tricks)',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '♥♦ Red = LOW (lose tricks)',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 8),
+                Text(
+                  '${_getBidType(widget.selectedCard!).name.toUpperCase()}: ${widget.selectedCard!.label}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSecondaryContainer,
+                  ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // Current selection display
-          if (widget.selectedCard != null) ...[
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.secondaryContainer,
-                    colorScheme.secondaryContainer.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.secondary.withValues(alpha: 0.5),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.secondary.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.gavel,
-                    color: colorScheme.onSecondaryContainer,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Bidding ${_getBidType(widget.selectedCard!).name.toUpperCase()} with ${widget.selectedCard!.label}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          // Black cards (HIGH bid)
-          _buildCardSection(
-            context,
-            title: 'Black Cards (HIGH Bid)',
-            subtitle: 'Choose to win as many tricks as possible',
-            cards: blackCards,
-            bidType: BidType.high,
-            sectionColor: Colors.grey.shade800,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Red cards (LOW bid)
-          _buildCardSection(
-            context,
-            title: 'Red Cards (LOW Bid)',
-            subtitle: 'Choose to lose as many tricks as possible',
-            cards: redCards,
-            bidType: BidType.low,
-            sectionColor: Colors.red.shade700,
-          ),
-
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
         ],
-      ),
+
+        // Side-by-side card selection
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              // Black card (HIGH bid)
+              Expanded(
+                child: _buildCompactCardOption(
+                  context,
+                  title: 'HIGH',
+                  subtitle: '♠♣',
+                  cards: blackCards,
+                  bidType: BidType.high,
+                  sectionColor: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Red card (LOW bid)
+              Expanded(
+                child: _buildCompactCardOption(
+                  context,
+                  title: 'LOW',
+                  subtitle: '♥♦',
+                  cards: redCards,
+                  bidType: BidType.low,
+                  sectionColor: Colors.red.shade700,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+      ],
     );
   }
 
-  Widget _buildCardSection(
+  /// Compact card option for side-by-side layout
+  Widget _buildCompactCardOption(
     BuildContext context, {
     required String title,
     required String subtitle,
@@ -210,36 +141,38 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
     final colorScheme = theme.colorScheme;
 
     if (cards.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.2),
+          ),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: sectionColor,
+                color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.outline.withValues(alpha: 0.3),
-                ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
-              child: Center(
-                child: Text(
-                  'No ${bidType == BidType.high ? 'black' : 'red'} cards in hand',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'None',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -247,110 +180,87 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: sectionColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: cards.map((card) {
-              final isSelected = widget.selectedCard == card;
-              final isHovered = _hoveredCard == card;
+    final card = cards.first;
+    final isSelected = widget.selectedCard == card;
+    final isHovered = _hoveredCard == card;
 
-              return MouseRegion(
-                onEnter: (_) => setState(() => _hoveredCard = card),
-                onExit: (_) => setState(() => _hoveredCard = null),
-                child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    widget.onCardSelected(card);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 60,
-                    height: 84,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colorScheme.primaryContainer
-                          : isHovered
-                              ? colorScheme.surfaceContainerHigh
-                              : colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : isHovered
-                                ? colorScheme.outline
-                                : colorScheme.outline.withValues(alpha: 0.3),
-                        width: isSelected ? 3 : 1.5,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color:
-                                    colorScheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : isHovered
-                              ? [
-                                  BoxShadow(
-                                    color: colorScheme.shadow
-                                        .withValues(alpha: 0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hoveredCard = card),
+      onExit: (_) => setState(() => _hoveredCard = null),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onCardSelected(card);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorScheme.primaryContainer
+                : isHovered
+                    ? colorScheme.surfaceContainerHigh
+                    : colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? colorScheme.primary
+                  : isHovered
+                      ? colorScheme.outline
+                      : colorScheme.outline.withValues(alpha: 0.3),
+              width: isSelected ? 3 : 2,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          card.rankSymbol,
-                          style: TextStyle(
-                            fontSize: isSelected ? 26 : 24,
-                            fontWeight: FontWeight.bold,
-                            color: card.isRed
-                                ? Colors.red.shade700
-                                : Colors.black87,
-                          ),
+                  ]
+                : isHovered
+                    ? [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                        Text(
-                          card.suitSymbol,
-                          style: TextStyle(
-                            fontSize: isSelected ? 24 : 22,
-                            color: card.isRed
-                                ? Colors.red.shade700
-                                : Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                      ]
+                    : null,
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title (HIGH/LOW) with theme-aware color
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              // Suit symbols with theme-aware color
+              Text(
+                subtitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Use PlayingCardWidget like in hand display
+              PlayingCardWidget(
+                card: card,
+                width: 70,
+                height: 98,
+                isSelected: isSelected,
+                isPeeking: false,
+                isWinning: false,
+                onTap: null, // Handled by parent GestureDetector
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

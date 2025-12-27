@@ -50,5 +50,28 @@ class CardConstants {
   /// Shows this much of each card before it's overlapped by the next
   static const double peggingCardOverlap = 22.0;
 
+  // ==================== Proportional Sizing Ratios ====================
+  // Used by PlayingCardWidget for responsive, proportional design
+  // All measurements are expressed as ratios of card width
+  // This ensures cards scale properly at different sizes
+
+  /// Border radius as a ratio of card width (10% of width)
+  static const double borderRadiusRatio = 0.1;
+
+  /// Corner rank font size as a ratio of card width (25% of width)
+  static const double cornerRankFontRatio = 0.25;
+
+  /// Corner suit font size as a ratio of card width (22% of width)
+  static const double cornerSuitFontRatio = 0.22;
+
+  /// Center suit symbol font size as a ratio of card width (35% of width)
+  static const double centerSuitFontRatio = 0.35;
+
+  /// Outer shadow blur radius as a ratio of card width (15% of width)
+  static const double shadowBlurRatio = 0.15;
+
+  /// Inner shadow blur radius as a ratio of card width (8% of width)
+  static const double shadowBlurInnerRatio = 0.08;
+
   CardConstants._(); // Private constructor to prevent instantiation
 }
