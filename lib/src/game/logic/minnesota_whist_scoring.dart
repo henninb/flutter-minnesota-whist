@@ -48,21 +48,17 @@ class MinnesotaWhistScoring {
         scores[opponentTeam] = (tricksWonByOpponents - 6) * 2;
       }
     } else {
-      // Low (Nula) hand: Want to take 6 or fewer tricks
-      if (tricksWonByGrandingTeam <= 6) {
-        // Granding team succeeded - score 1 point per trick under 7
-        scores[grandingTeam] = 7 - tricksWonByGrandingTeam;
-      } else {
-        // Granding team failed - opponents score 1 point per trick under 7
-        scores[opponentTeam] = 7 - tricksWonByOpponents;
-      }
+      // Low (Nula) hand - only team with <7 tricks scores
+      final scoringTeam = tricksWonByGrandingTeam < 7 ? grandingTeam : opponentTeam;
+      final scoringTeamTricks = tricksWonByGrandingTeam < 7 ? tricksWonByGrandingTeam : tricksWonByOpponents;
+      scores[scoringTeam] = 7 - scoringTeamTricks;
     }
 
     return scores;
   }
 
   /// Alternative scoring: All players bid red (Low hand, no one granded)
-  /// The team that takes more tricks loses points
+  /// Only team with <7 tricks scores positive points
   static Map<Team, int> scoreAllLowHand({
     required int tricksWonByNorthSouth,
   }) {
@@ -73,13 +69,13 @@ class MinnesotaWhistScoring {
       Team.eastWest: 0,
     };
 
-    // Team with more tricks loses 1 point per trick over 6
-    if (tricksWonByNorthSouth > tricksWonByEastWest) {
-      scores[Team.northSouth] = -(tricksWonByNorthSouth - 6);
-    } else if (tricksWonByEastWest > tricksWonByNorthSouth) {
-      scores[Team.eastWest] = -(tricksWonByEastWest - 6);
+    // Only team with <7 tricks scores
+    if (tricksWonByNorthSouth < 7) {
+      scores[Team.northSouth] = 7 - tricksWonByNorthSouth;
+    } else if (tricksWonByEastWest < 7) {
+      scores[Team.eastWest] = 7 - tricksWonByEastWest;
     }
-    // If tied at 6-6 (rare in 13-trick game), no points scored
+    // If tied at 6-7 or 7-6, no points scored
 
     return scores;
   }

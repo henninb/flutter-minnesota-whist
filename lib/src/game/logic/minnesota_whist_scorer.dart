@@ -54,31 +54,20 @@ class MinnesotaWhistScorer {
 
     if (allBidLow) {
       // Special case: All players bid red (low)
-      // Team that wins more tricks loses points
-      if (grandingTeam == Team.northSouth) {
-        if (tricksWonByGrandingTeam > tricksWonByOpponents) {
-          teamNSPoints = -(tricksWonByGrandingTeam - 6);
-          resultDescription =
-              'All bid LOW. North-South took $tricksWonByGrandingTeam tricks and loses ${-teamNSPoints} points';
-        } else if (tricksWonByOpponents > tricksWonByGrandingTeam) {
-          teamEWPoints = -(tricksWonByOpponents - 6);
-          resultDescription =
-              'All bid LOW. East-West took $tricksWonByOpponents tricks and loses ${-teamEWPoints} points';
-        } else {
-          resultDescription = 'All bid LOW. Tied 6-6, no points scored';
-        }
+      // Only team with <7 tricks scores positive points
+      final tricksNS = grandingTeam == Team.northSouth ? tricksWonByGrandingTeam : tricksWonByOpponents;
+      final tricksEW = 13 - tricksNS;
+
+      if (tricksNS < 7) {
+        teamNSPoints = 7 - tricksNS;
+        resultDescription =
+            'All bid LOW. North-South took $tricksNS tricks and scores $teamNSPoints points';
+      } else if (tricksEW < 7) {
+        teamEWPoints = 7 - tricksEW;
+        resultDescription =
+            'All bid LOW. East-West took $tricksEW tricks and scores $teamEWPoints points';
       } else {
-        if (tricksWonByOpponents > tricksWonByGrandingTeam) {
-          teamNSPoints = -(tricksWonByOpponents - 6);
-          resultDescription =
-              'All bid LOW. North-South took $tricksWonByOpponents tricks and loses ${-teamNSPoints} points';
-        } else if (tricksWonByGrandingTeam > tricksWonByOpponents) {
-          teamEWPoints = -(tricksWonByGrandingTeam - 6);
-          resultDescription =
-              'All bid LOW. East-West took $tricksWonByGrandingTeam tricks and loses ${-teamEWPoints} points';
-        } else {
-          resultDescription = 'All bid LOW. Tied 6-6, no points scored';
-        }
+        resultDescription = 'All bid LOW. Tied 6-7 or 7-6, no points scored';
       }
     } else if (handType == BidType.high) {
       // High (Grand) hand
@@ -105,29 +94,29 @@ class MinnesotaWhistScorer {
             '${_teamName(grandingTeam)} granded HIGH but only won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points (×2)';
       }
     } else {
-      // Low (Nula) hand
-      if (tricksWonByGrandingTeam <= 6) {
-        // Granding team succeeded
+      // Low (Nula) hand - only team with <7 tricks scores
+      final Team scoringTeam;
+      final int scoringTeamTricks;
+
+      if (tricksWonByGrandingTeam < 7) {
+        scoringTeam = grandingTeam;
+        scoringTeamTricks = tricksWonByGrandingTeam;
         grandingTeamSucceeded = true;
-        final points = 7 - tricksWonByGrandingTeam;
-        if (grandingTeam == Team.northSouth) {
-          teamNSPoints = points;
-        } else {
-          teamEWPoints = points;
-        }
-        resultDescription =
-            '${_teamName(grandingTeam)} granded LOW and won only $tricksWonByGrandingTeam tricks (+$points)';
       } else {
-        // Granding team failed - opponents score
-        final points = 7 - tricksWonByOpponents;
-        if (opponentTeam == Team.northSouth) {
-          teamNSPoints = points;
-        } else {
-          teamEWPoints = points;
-        }
-        resultDescription =
-            '${_teamName(grandingTeam)} granded LOW but won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points';
+        scoringTeam = opponentTeam;
+        scoringTeamTricks = tricksWonByOpponents;
       }
+
+      final points = 7 - scoringTeamTricks;
+      if (scoringTeam == Team.northSouth) {
+        teamNSPoints = points;
+      } else {
+        teamEWPoints = points;
+      }
+
+      resultDescription = grandingTeamSucceeded
+          ? '${_teamName(grandingTeam)} granded LOW and won only $tricksWonByGrandingTeam tricks (+$points)'
+          : '${_teamName(grandingTeam)} granded LOW but won $tricksWonByGrandingTeam tricks. ${_teamName(opponentTeam)} scores +$points';
     }
 
     if (kDebugMode) {
