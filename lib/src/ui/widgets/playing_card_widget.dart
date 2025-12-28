@@ -115,7 +115,8 @@ class PlayingCardWidget extends StatelessWidget {
                 : const Color(0xFF757575); // Medium gray
 
     // Border width based on state
-    final borderWidth = (isSelected || isWinning) ? 3.0 : (isPeeking ? 2.0 : 1.5);
+    final borderWidth =
+        (isSelected || isWinning) ? 3.0 : (isPeeking ? 2.0 : 1.5);
 
     final cardContent = AnimatedContainer(
       duration: const Duration(milliseconds: 200),

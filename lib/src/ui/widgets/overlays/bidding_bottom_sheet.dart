@@ -94,7 +94,8 @@ class _BiddingBottomSheetState extends State<BiddingBottomSheet> {
                 ),
               ),
               Tooltip(
-                message: '♠♣ Black = HIGH (win tricks)\n♥♦ Red = LOW (lose tricks)\n\nUse your lowest card!',
+                message:
+                    '♠♣ Black = HIGH (win tricks)\n♥♦ Red = LOW (lose tricks)\n\nUse your lowest card!',
                 preferBelow: false,
                 child: IconButton(
                   icon: const Icon(Icons.help_outline),

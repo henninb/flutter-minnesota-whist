@@ -55,7 +55,9 @@ class MinnesotaWhistScorer {
     if (allBidLow) {
       // Special case: All players bid red (low)
       // Only team with <7 tricks scores positive points
-      final tricksNS = grandingTeam == Team.northSouth ? tricksWonByGrandingTeam : tricksWonByOpponents;
+      final tricksNS = grandingTeam == Team.northSouth
+          ? tricksWonByGrandingTeam
+          : tricksWonByOpponents;
       final tricksEW = 13 - tricksNS;
 
       if (tricksNS < 7) {

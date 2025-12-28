@@ -49,8 +49,11 @@ class MinnesotaWhistScoring {
       }
     } else {
       // Low (Nula) hand - only team with <7 tricks scores
-      final scoringTeam = tricksWonByGrandingTeam < 7 ? grandingTeam : opponentTeam;
-      final scoringTeamTricks = tricksWonByGrandingTeam < 7 ? tricksWonByGrandingTeam : tricksWonByOpponents;
+      final scoringTeam =
+          tricksWonByGrandingTeam < 7 ? grandingTeam : opponentTeam;
+      final scoringTeamTricks = tricksWonByGrandingTeam < 7
+          ? tricksWonByGrandingTeam
+          : tricksWonByOpponents;
       scores[scoringTeam] = 7 - scoringTeamTricks;
     }
 

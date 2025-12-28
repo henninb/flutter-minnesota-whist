@@ -46,11 +46,15 @@ class _BiddingInterfaceState extends State<BiddingInterface> {
     // Separate cards by color and get only the lowest from each
     final allBlackCards = widget.playerHand.where(_isBlackCard).toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
-    final blackCards = allBlackCards.isNotEmpty ? [allBlackCards.first] : <PlayingCard>[];
+    final blackCards =
+        allBlackCards.isNotEmpty ? [allBlackCards.first] : <PlayingCard>[];
 
-    final allRedCards = widget.playerHand.where((c) => !_isBlackCard(c)).toList()
+    final allRedCards = widget.playerHand
+        .where((c) => !_isBlackCard(c))
+        .toList()
       ..sort((a, b) => a.rank.index.compareTo(b.rank.index));
-    final redCards = allRedCards.isNotEmpty ? [allRedCards.first] : <PlayingCard>[];
+    final redCards =
+        allRedCards.isNotEmpty ? [allRedCards.first] : <PlayingCard>[];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
