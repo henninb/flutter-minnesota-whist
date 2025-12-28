@@ -61,13 +61,13 @@ void main() {
         ),
       );
 
-      // Should show instructions
-      expect(find.textContaining('Black = HIGH'), findsOneWidget);
-      expect(find.textContaining('Red = LOW'), findsOneWidget);
+      // Should show HIGH and LOW sections
+      expect(find.text('HIGH'), findsOneWidget);
+      expect(find.text('LOW'), findsOneWidget);
 
-      // Should show black and red card sections
-      expect(find.text('Black Cards (HIGH Bid)'), findsOneWidget);
-      expect(find.text('Red Cards (LOW Bid)'), findsOneWidget);
+      // Should show suit symbols
+      expect(find.text('♠♣'), findsOneWidget); // Black suits
+      expect(find.text('♥♦'), findsOneWidget); // Red suits
     });
 
     testWidgets('allows selecting a card', (WidgetTester tester) async {
@@ -82,12 +82,16 @@ void main() {
         ),
       );
 
-      // Find a card widget (look for rank symbol)
-      final cardFinder = find.text('A'); // Ace of spades
-      expect(cardFinder, findsOneWidget);
+      // Find the HIGH section container and tap it
+      // The widget shows only the lowest black card (2 of spades)
+      final highSection = find.ancestor(
+        of: find.text('HIGH'),
+        matching: find.byType(MouseRegion),
+      );
+      expect(highSection, findsOneWidget);
 
-      // Tap on the card
-      await tester.tap(cardFinder);
+      // Tap on the HIGH section to select it
+      await tester.tap(highSection);
       await tester.pumpAndSettle();
 
       // Should show confirm button after selection
@@ -107,9 +111,12 @@ void main() {
         ),
       );
 
-      // Select a card
-      final cardFinder = find.text('A'); // Ace of spades
-      await tester.tap(cardFinder);
+      // Select the HIGH section (which contains the 2 of spades)
+      final highSection = find.ancestor(
+        of: find.text('HIGH'),
+        matching: find.byType(MouseRegion),
+      );
+      await tester.tap(highSection);
       await tester.pumpAndSettle();
 
       // Confirm the bid
@@ -118,11 +125,11 @@ void main() {
       await tester.tap(confirmButton);
       await tester.pumpAndSettle();
 
-      // Should have submitted the bid
+      // Should have submitted the bid (lowest black card = 2 of spades)
       expect(submittedBid, isNotNull);
       expect(submittedBid, isA<PlayingCard>());
       final card = submittedBid as PlayingCard;
-      expect(card.rank, equals(Rank.ace));
+      expect(card.rank, equals(Rank.two));
       expect(card.suit, equals(Suit.spades));
     });
 
@@ -138,12 +145,16 @@ void main() {
         ),
       );
 
-      // Select a black card (HIGH bid)
-      await tester.tap(find.text('A'));
+      // Select the HIGH section (2 of spades)
+      final highSection = find.ancestor(
+        of: find.text('HIGH'),
+        matching: find.byType(MouseRegion),
+      );
+      await tester.tap(highSection);
       await tester.pumpAndSettle();
 
-      // Should show "Bidding HIGH"
-      expect(find.textContaining('Bidding HIGH'), findsOneWidget);
+      // Should show "HIGH: 2♠" in the selection display
+      expect(find.textContaining('HIGH: 2♠'), findsOneWidget);
     });
 
     testWidgets('handles hand with only black cards',
@@ -173,11 +184,12 @@ void main() {
         ),
       );
 
-      // Should show black cards
-      expect(find.text('Black Cards (HIGH Bid)'), findsOneWidget);
+      // Should show HIGH section
+      expect(find.text('HIGH'), findsOneWidget);
 
-      // Should show message about no red cards
-      expect(find.textContaining('No red cards in hand'), findsOneWidget);
+      // Should show LOW section with "None" message
+      expect(find.text('LOW'), findsOneWidget);
+      expect(find.text('None'), findsOneWidget);
     });
 
     testWidgets('handles hand with only red cards',
@@ -207,11 +219,12 @@ void main() {
         ),
       );
 
-      // Should show red cards
-      expect(find.text('Red Cards (LOW Bid)'), findsOneWidget);
+      // Should show LOW section
+      expect(find.text('LOW'), findsOneWidget);
 
-      // Should show message about no black cards
-      expect(find.textContaining('No black cards in hand'), findsOneWidget);
+      // Should show HIGH section with "None" message
+      expect(find.text('HIGH'), findsOneWidget);
+      expect(find.text('None'), findsOneWidget);
     });
 
     testWidgets('card selection is visually indicated',
@@ -227,12 +240,16 @@ void main() {
         ),
       );
 
-      // Tap a card to select it
-      await tester.tap(find.text('A'));
+      // Tap the HIGH section to select it (selects 2 of spades)
+      final highSection = find.ancestor(
+        of: find.text('HIGH'),
+        matching: find.byType(MouseRegion),
+      );
+      await tester.tap(highSection);
       await tester.pumpAndSettle();
 
-      // Should show the selected card in the status display
-      expect(find.textContaining('A♠'), findsAtLeastNWidgets(1));
+      // Should show the selected card in the status display and confirm button
+      expect(find.textContaining('2♠'), findsAtLeastNWidgets(1));
     });
   });
 }
