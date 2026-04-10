@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../game/models/card.dart';
+import '../utils/string_sanitizer.dart';
 
 class StoredStats {
   const StoredStats({
@@ -197,9 +198,17 @@ class SharedPrefsPersistence implements GamePersistence {
     required String opponentName,
   }) {
     try {
+      final safeName = StringSanitizer.sanitizeNameWithDefault(
+        playerName,
+        'Player',
+      );
+      final safeOpponent = StringSanitizer.sanitizeNameWithDefault(
+        opponentName,
+        'Opponent',
+      );
       _prefs
-        ..setString(_playerNameKey, playerName)
-        ..setString(_opponentNameKey, opponentName);
+        ..setString(_playerNameKey, safeName)
+        ..setString(_opponentNameKey, safeOpponent);
 
       if (kDebugMode) {
         debugPrint('[Persistence] Player names saved successfully');

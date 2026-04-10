@@ -33,7 +33,6 @@ class GameEngine extends ChangeNotifier {
       : _persistence = persistence,
         _state = const GameState();
 
-  // ignore: unused_field
   final GamePersistence? _persistence;
   GameState _state;
 
@@ -70,10 +69,24 @@ class GameEngine extends ChangeNotifier {
   // GAME LIFECYCLE
   // ============================================================================
 
-  /// Initialize game (load saved state if available)
+  /// Initialize game — loads persisted stats and player names if available
   Future<void> initialize() async {
-    // For now, just start fresh
-    // TODO: Implement state persistence
+    final stats = _persistence?.loadStats();
+    if (stats != null) {
+      _state = _state.copyWith(
+        gamesWon: stats.gamesWon,
+        gamesLost: stats.gamesLost,
+      );
+    }
+
+    final playerNames = _persistence?.loadPlayerNames();
+    if (playerNames != null) {
+      _state = _state.copyWith(
+        playerName: playerNames.playerName,
+        opponentWestName: playerNames.opponentName,
+      );
+    }
+
     notifyListeners();
   }
 
@@ -296,6 +309,9 @@ class GameEngine extends ChangeNotifier {
   ///
   /// Can only be called during the bidding phase before the player has bid.
   void applyTestHand(List<PlayingCard> testHand) {
+    assert(kDebugMode, 'applyTestHand is only allowed in debug builds');
+    if (!kDebugMode) return;
+
     if (_state.currentPhase != GamePhase.bidding) {
       _debugLog('⚠️ Cannot apply test hand - not in bidding phase');
       return;
@@ -322,18 +338,16 @@ class GameEngine extends ChangeNotifier {
     _debugLog('Total cards before redistribution: ${allCards.length}');
 
     // VALIDATION: Verify test hand cards exist in the current deal
-    final deck = createDeck();
     for (final testCard in testHand) {
-      final existsInDeck = deck.any(
-        (deckCard) =>
-            deckCard.rank == testCard.rank && deckCard.suit == testCard.suit,
+      final existsInDeal = allCards.any(
+        (c) => c.rank == testCard.rank && c.suit == testCard.suit,
       );
-      if (!existsInDeck) {
+      if (!existsInDeal) {
         _debugLog(
-          '⚠️ ERROR: Test hand contains invalid card: ${testCard.label}',
+          '⚠️ ERROR: Test hand contains card not in current deal: ${testCard.label}',
         );
         _debugLog(
-          '⚠️ Test hand rejected - all cards must be from standard deck',
+          '⚠️ Test hand rejected - all cards must come from the current deal',
         );
         return;
       }
@@ -1226,7 +1240,6 @@ class GameEngine extends ChangeNotifier {
     _updateState(
       _state.copyWith(
         currentPhase: GamePhase.play,
-        isPlayPhase: true,
         playerHand: sortedPlayerHand,
         currentTrick:
             Trick(plays: [], leader: leader, trumpSuit: _state.trumpSuit),
@@ -1283,7 +1296,6 @@ class GameEngine extends ChangeNotifier {
     _updateState(
       _state.copyWith(
         currentPhase: GamePhase.play,
-        isPlayPhase: true,
         trumpSuit: trumpSuit,
         playerHand: sortedPlayerHand,
         currentTrick: Trick(plays: [], leader: leader, trumpSuit: trumpSuit),
@@ -2067,10 +2079,12 @@ class GameEngine extends ChangeNotifier {
       }
 
       // Count individual tricks won by each player
+      final ohHellTrumpRules = TrumpRules(trumpSuit: _state.trumpSuit);
+      final ohHellTrickEngine = TrickEngine(trumpRules: ohHellTrumpRules);
       for (final position in Position.values) {
         int tricksWon = 0;
         for (final trick in _state.completedTricks) {
-          if (trick.winner == position) {
+          if (ohHellTrickEngine.getCurrentWinner(trick) == position) {
             tricksWon++;
           }
         }
@@ -2097,9 +2111,11 @@ class GameEngine extends ChangeNotifier {
         }
 
         // Count declarer's tricks
+        final widowTrumpRules = TrumpRules(trumpSuit: _state.trumpSuit);
+        final widowTrickEngine = TrickEngine(trumpRules: widowTrumpRules);
         int tricksCount = 0;
         for (final trick in _state.completedTricks) {
-          if (trick.winner == declarer) {
+          if (widowTrickEngine.getCurrentWinner(trick) == declarer) {
             tricksCount++;
           }
         }
@@ -2135,7 +2151,6 @@ class GameEngine extends ChangeNotifier {
     _updateState(
       _state.copyWith(
         currentPhase: GamePhase.scoring,
-        isPlayPhase: false,
         teamNorthSouthScore: newScoreNS,
         teamEastWestScore: newScoreEW,
         gameStatus: handScore.description,
@@ -2235,6 +2250,9 @@ class GameEngine extends ChangeNotifier {
 
     final playerWon = winningTeam == Team.northSouth;
 
+    final newGamesWon = playerWon ? _state.gamesWon + 1 : _state.gamesWon;
+    final newGamesLost = playerWon ? _state.gamesLost : _state.gamesLost + 1;
+
     _updateState(
       _state.copyWith(
         currentPhase: GamePhase.gameOver,
@@ -2244,17 +2262,26 @@ class GameEngine extends ChangeNotifier {
           finalScoreNS: finalScoreNS,
           finalScoreEW: finalScoreEW,
           status: status,
-          gamesWon: playerWon ? _state.gamesWon + 1 : _state.gamesWon,
-          gamesLost: playerWon ? _state.gamesLost : _state.gamesLost + 1,
+          gamesWon: newGamesWon,
+          gamesLost: newGamesLost,
         ),
-        gamesWon: playerWon ? _state.gamesWon + 1 : _state.gamesWon,
-        gamesLost: playerWon ? _state.gamesLost : _state.gamesLost + 1,
+        gamesWon: newGamesWon,
+        gamesLost: newGamesLost,
         gameStatus: scoringEngine.getGameOverMessage(
           status,
           finalScoreNS,
           finalScoreEW,
         ),
       ),
+    );
+
+    _persistence?.saveStats(
+      gamesWon: _state.gamesWon,
+      gamesLost: _state.gamesLost,
+      skunksFor: 0,
+      skunksAgainst: 0,
+      doubleSkunksFor: 0,
+      doubleSkunksAgainst: 0,
     );
   }
 

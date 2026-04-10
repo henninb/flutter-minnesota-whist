@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../game/engine/game_engine.dart';
 import '../../game/engine/game_state.dart';
@@ -51,9 +52,11 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(
-      '🎮 [GameScreen.build] Current settings variant: ${widget.currentSettings.selectedVariant}',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '🎮 [GameScreen.build] Current settings variant: ${widget.currentSettings.selectedVariant}',
+      );
+    }
     return AnimatedBuilder(
       animation: widget.engine,
       builder: (context, _) {
@@ -62,22 +65,27 @@ class _GameScreenState extends State<GameScreen> {
         // Reset overlay flags on phase changes
         _resetOverlayFlags(state);
 
-        // Show bottom sheets based on game phase
-        debugPrint(
-          '🎯 [UI TIMING] Build phase: ${state.currentPhase}, currentBidder: ${state.currentBidder}, biddingOverlayShown: $_biddingOverlayShown',
-        );
+        if (kDebugMode) {
+          debugPrint(
+            '🎯 [UI TIMING] Build phase: ${state.currentPhase}, currentBidder: ${state.currentBidder}, biddingOverlayShown: $_biddingOverlayShown',
+          );
+        }
 
         // For bidding, show immediately; for others use post-frame callback
         // Minnesota Whist: Check showBiddingDialog flag instead of currentBidder (simultaneous bidding)
         if (state.showBiddingDialog && !_biddingOverlayShown) {
-          debugPrint(
-            '🎯 [UI TIMING] Scheduling bidding sheet via postFrameCallback',
-          );
+          if (kDebugMode) {
+            debugPrint(
+              '🎯 [UI TIMING] Scheduling bidding sheet via postFrameCallback',
+            );
+          }
           // Show bidding sheet immediately without delay
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            debugPrint(
-              '🎯 [UI TIMING] postFrameCallback executing for bidding sheet',
-            );
+            if (kDebugMode) {
+              debugPrint(
+                '🎯 [UI TIMING] postFrameCallback executing for bidding sheet',
+              );
+            }
             if (!mounted) return;
             _biddingOverlayShown = true;
             _showBiddingSheet(context, state);
@@ -120,16 +128,20 @@ class _GameScreenState extends State<GameScreen> {
               if (!state.gameStarted)
                 WelcomeOverlay(
                   onStartGame: () {
-                    debugPrint(
-                      '🎮 [GameScreen] Starting game with variant: ${widget.currentSettings.selectedVariant}',
-                    );
+                    if (kDebugMode) {
+                      debugPrint(
+                        '🎮 [GameScreen] Starting game with variant: ${widget.currentSettings.selectedVariant}',
+                      );
+                    }
                     widget.engine.startNewGame(
                       variant: widget.currentSettings.selectedVariant,
                     );
                   },
                   selectedVariant: widget.currentSettings.selectedVariant,
                   onVariantSelected: (variant) {
-                    debugPrint('🎮 [GameScreen] Variant selected: $variant');
+                    if (kDebugMode) {
+                      debugPrint('🎮 [GameScreen] Variant selected: $variant');
+                    }
                     widget.onSettingsChange(
                       widget.currentSettings.copyWith(selectedVariant: variant),
                     );
@@ -176,7 +188,9 @@ class _GameScreenState extends State<GameScreen> {
     // Show bidding sheet when showBiddingDialog flag is set
     // Minnesota Whist: Check showBiddingDialog instead of currentBidder (simultaneous bidding)
     if (state.showBiddingDialog && !_biddingOverlayShown) {
-      debugPrint('🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays');
+      if (kDebugMode) {
+        debugPrint('🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays');
+      }
       _biddingOverlayShown = true;
       _showBiddingSheet(context, state);
     }
@@ -194,8 +208,10 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show bidding bottom sheet
   void _showBiddingSheet(BuildContext context, GameState state) {
-    debugPrint('🎯 [UI TIMING] _showBiddingSheet() called, showing modal');
-    debugPrint('🎯 [VARIANT] Current variant: ${state.variantType}');
+    if (kDebugMode) {
+      debugPrint('🎯 [UI TIMING] _showBiddingSheet() called, showing modal');
+      debugPrint('🎯 [VARIANT] Current variant: ${state.variantType}');
+    }
 
     // Check variant type and show appropriate bidding UI
     if (state.variantType == VariantType.bidWhist) {
@@ -212,7 +228,9 @@ class _GameScreenState extends State<GameScreen> {
         isDismissible: false, // Must bid or pass
         enableDrag: false,
         builder: (context) {
-          debugPrint('🎯 [UI TIMING] Bidding sheet builder called');
+          if (kDebugMode) {
+            debugPrint('🎯 [UI TIMING] Bidding sheet builder called');
+          }
           return DraggableScrollableSheet(
             initialChildSize: 0.95,
             minChildSize: 0.6,
@@ -260,19 +278,12 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show Bid Whist sequential bidding dialog
   void _showBidWhistBiddingDialog(BuildContext context, GameState state) {
-    debugPrint('🎯 [BID WHIST] Showing sequential bidding dialog');
+    if (kDebugMode) debugPrint('🎯 [BID WHIST] Showing sequential bidding dialog');
 
     // Check if it's the player's turn to bid
     if (state.currentBidder != Position.south) {
-      debugPrint('🎯 [BID WHIST] Not player\'s turn, waiting for AI');
+      if (kDebugMode) debugPrint('🎯 [BID WHIST] Not player\'s turn, waiting for AI');
       return;
-    }
-
-    // Get highest bid so far
-    int? highestBid;
-    for (final _ in state.bidHistory) {
-      // TODO: Extract book count from bid
-      // For now, just track if there are any bids
     }
 
     showDialog(
@@ -280,15 +291,17 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => BidWhistBiddingDialog(
         currentBidder: state.currentBidder ?? Position.south,
-        highestBid: highestBid,
+        highestBid: null,
         onBid: (books, isUptown) {
-          debugPrint(
-            '🎯 [BID WHIST] Player bid: $books books, ${isUptown ? "Uptown" : "Downtown"}',
-          );
+          if (kDebugMode) {
+            debugPrint(
+              '🎯 [BID WHIST] Player bid: $books books, ${isUptown ? "Uptown" : "Downtown"}',
+            );
+          }
           widget.engine.placeBidWhistBid(books, isUptown);
         },
         onPass: () {
-          debugPrint('🎯 [BID WHIST] Player passed');
+          if (kDebugMode) debugPrint('🎯 [BID WHIST] Player passed');
           widget.engine.placeBidWhistPass();
         },
       ),
@@ -297,14 +310,14 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show Widow Whist bidding dialog
   void _showWidowWhistBiddingDialog(BuildContext context, GameState state) {
-    debugPrint('🎯 [WIDOW WHIST] Showing bidding dialog');
+    if (kDebugMode) debugPrint('🎯 [WIDOW WHIST] Showing bidding dialog');
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => WidowWhistBiddingDialog(
         onBid: (tricks) {
-          debugPrint('🎯 [WIDOW WHIST] Player bid: $tricks tricks');
+          if (kDebugMode) debugPrint('🎯 [WIDOW WHIST] Player bid: $tricks tricks');
           widget.engine.placeWidowWhistBid(tricks);
         },
       ),
@@ -313,11 +326,11 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show Oh Hell sequential bidding dialog
   void _showOhHellBiddingDialog(BuildContext context, GameState state) {
-    debugPrint('🎯 [OH HELL] Showing sequential bidding dialog');
+    if (kDebugMode) debugPrint('🎯 [OH HELL] Showing sequential bidding dialog');
 
     // Check if it's the player's turn to bid
     if (state.currentBidder != Position.south) {
-      debugPrint('🎯 [OH HELL] Not player\'s turn, waiting for AI');
+      if (kDebugMode) debugPrint('🎯 [OH HELL] Not player\'s turn, waiting for AI');
       return;
     }
 
@@ -337,7 +350,7 @@ class _GameScreenState extends State<GameScreen> {
         currentBids: currentBids,
         tricksAvailable: 13, // Standard hand size
         onBid: (tricks) {
-          debugPrint('🎯 [OH HELL] Player bid: $tricks tricks');
+          if (kDebugMode) debugPrint('🎯 [OH HELL] Player bid: $tricks tricks');
           widget.engine.placeOhHellBid(tricks);
         },
       ),

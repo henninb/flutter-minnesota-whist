@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
 
@@ -18,6 +19,7 @@ enum Rank {
   ace,
 }
 
+@immutable
 class PlayingCard {
   const PlayingCard({required this.rank, required this.suit});
 
@@ -44,12 +46,15 @@ class PlayingCard {
       case Rank.nine:
         return 9;
       case Rank.ten:
-      case Rank.jack:
-      case Rank.queen:
-      case Rank.king:
         return 10;
-      case Rank.ace:
+      case Rank.jack:
         return 11;
+      case Rank.queen:
+        return 12;
+      case Rank.king:
+        return 13;
+      case Rank.ace:
+        return 14;
     }
   }
 
@@ -298,26 +303,26 @@ List<PlayingCard> _sortWithTrump(List<PlayingCard> hand, Suit trumpSuit) {
         return 13;
       case Rank.queen:
         return 12;
-      case Rank.ten:
+      case Rank.jack:
         return 11;
-      case Rank.nine:
+      case Rank.ten:
         return 10;
-      case Rank.eight:
+      case Rank.nine:
         return 9;
-      case Rank.seven:
+      case Rank.eight:
         return 8;
-      case Rank.six:
+      case Rank.seven:
         return 7;
-      case Rank.five:
+      case Rank.six:
         return 6;
-      case Rank.four:
+      case Rank.five:
         return 5;
-      case Rank.three:
+      case Rank.four:
         return 4;
-      case Rank.two:
+      case Rank.three:
         return 3;
-      default:
-        return 0;
+      case Rank.two:
+        return 2;
     }
   }
 

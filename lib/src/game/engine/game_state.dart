@@ -61,7 +61,6 @@ class GameState {
     this.handType, // High or Low hand
     this.allBidLow = false, // True if all 4 players bid red
     // Play phase
-    this.isPlayPhase = false,
     this.trumpSuit, // null for no-trump
     this.currentTrick,
     this.completedTricks = const [],
@@ -135,7 +134,7 @@ class GameState {
   final bool allBidLow; // True if all 4 players bid red
 
   // Play phase
-  final bool isPlayPhase;
+  bool get isPlayPhase => currentPhase == GamePhase.play;
   final Suit? trumpSuit;
   final Trick? currentTrick;
   final List<Trick> completedTricks;
@@ -242,7 +241,6 @@ class GameState {
     Position? contractor,
     BidType? handType,
     bool? allBidLow,
-    bool? isPlayPhase,
     Suit? trumpSuit,
     Trick? currentTrick,
     List<Trick>? completedTricks,
@@ -314,7 +312,6 @@ class GameState {
       contractor: clearContractor ? null : (contractor ?? this.contractor),
       handType: clearHandType ? null : (handType ?? this.handType),
       allBidLow: allBidLow ?? this.allBidLow,
-      isPlayPhase: isPlayPhase ?? this.isPlayPhase,
       trumpSuit: clearTrumpSuit ? null : (trumpSuit ?? this.trumpSuit),
       currentTrick:
           clearCurrentTrick ? null : (currentTrick ?? this.currentTrick),

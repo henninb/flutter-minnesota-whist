@@ -51,54 +51,16 @@ class TrumpRules {
 
   /// Compare two trump cards
   int _compareTrumpCards(PlayingCard card1, PlayingCard card2) {
-    final rank1 = _getTrumpRank(card1);
-    final rank2 = _getTrumpRank(card2);
-    return rank1.compareTo(rank2);
-  }
-
-  /// Get trump rank (higher number = higher card)
-  /// In Minnesota Whist: A (high) K Q J 10 9 8 7 6 5 4 3 2 (low)
-  int _getTrumpRank(PlayingCard card) {
-    switch (card.rank) {
-      case Rank.ace:
-        return 14;
-      case Rank.king:
-        return 13;
-      case Rank.queen:
-        return 12;
-      case Rank.jack:
-        return 11;
-      case Rank.ten:
-        return 10;
-      case Rank.nine:
-        return 9;
-      case Rank.eight:
-        return 8;
-      case Rank.seven:
-        return 7;
-      case Rank.six:
-        return 6;
-      case Rank.five:
-        return 5;
-      case Rank.four:
-        return 4;
-      case Rank.three:
-        return 3;
-      case Rank.two:
-        return 2;
-    }
+    return _rankValue(card1).compareTo(_rankValue(card2));
   }
 
   /// Compare two non-trump cards (assumed to be same suit)
   int _compareNonTrumpCards(PlayingCard card1, PlayingCard card2) {
-    final rank1 = _getNonTrumpRank(card1);
-    final rank2 = _getNonTrumpRank(card2);
-    return rank1.compareTo(rank2);
+    return _rankValue(card1).compareTo(_rankValue(card2));
   }
 
-  /// Get non-trump rank (higher number = higher card)
-  /// In Minnesota Whist: A (high) K Q J 10 9 8 7 6 5 4 3 2 (low)
-  int _getNonTrumpRank(PlayingCard card) {
+  /// Card rank value — higher number beats lower (A=14 … 2=2)
+  int _rankValue(PlayingCard card) {
     switch (card.rank) {
       case Rank.ace:
         return 14;

@@ -7,10 +7,17 @@ import '../models/game_settings.dart';
 class SettingsRepository {
   static const String _settingsKey = 'game_settings';
 
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   /// Load game settings from persistent storage
   Future<GameSettings> loadSettings() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefs();
       final jsonString = prefs.getString(_settingsKey);
 
       if (jsonString == null) {
@@ -55,7 +62,7 @@ class SettingsRepository {
   /// Save game settings to persistent storage
   Future<void> saveSettings(GameSettings settings) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefs();
       final jsonString = jsonEncode(settings.toJson());
       await prefs.setString(_settingsKey, jsonString);
 
@@ -64,7 +71,6 @@ class SettingsRepository {
         debugPrint(
           '[SettingsRepository] Saved variant: ${settings.selectedVariant}',
         );
-        debugPrint('[SettingsRepository] JSON: $jsonString');
       }
     } on FormatException catch (e) {
       if (kDebugMode) {

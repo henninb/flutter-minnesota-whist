@@ -130,10 +130,6 @@ class Trick {
     return plays.first.card.suit;
   }
 
-  // Get winner of trick (must be complete)
-  // Note: Winner determination logic will be in TrickEngine
-  Position? get winner => null; // Implemented in TrickEngine
-
   Trick copyWith({
     List<CardPlay>? plays,
     Position? leader,

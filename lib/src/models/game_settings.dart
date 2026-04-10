@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'theme_models.dart';
 import '../game/variants/variant_type.dart';
 
@@ -15,6 +16,7 @@ enum CountingMode {
 }
 
 /// Game settings data class
+@immutable
 class GameSettings {
   final CardSelectionMode cardSelectionMode;
   final CountingMode countingMode;
