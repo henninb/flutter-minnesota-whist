@@ -6,4 +6,6 @@ genhtml coverage/lcov.info -o coverage/html
 xdg-open coverage/html/index.html
 echo xdg-open coverage/html/index.html
 
+dart format --set-exit-if-changed .
+
 exit 0

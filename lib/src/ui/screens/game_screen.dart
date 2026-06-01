@@ -189,7 +189,8 @@ class _GameScreenState extends State<GameScreen> {
     // Minnesota Whist: Check showBiddingDialog instead of currentBidder (simultaneous bidding)
     if (state.showBiddingDialog && !_biddingOverlayShown) {
       if (kDebugMode) {
-        debugPrint('🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays');
+        debugPrint(
+            '🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays');
       }
       _biddingOverlayShown = true;
       _showBiddingSheet(context, state);
@@ -278,11 +279,13 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show Bid Whist sequential bidding dialog
   void _showBidWhistBiddingDialog(BuildContext context, GameState state) {
-    if (kDebugMode) debugPrint('🎯 [BID WHIST] Showing sequential bidding dialog');
+    if (kDebugMode)
+      debugPrint('🎯 [BID WHIST] Showing sequential bidding dialog');
 
     // Check if it's the player's turn to bid
     if (state.currentBidder != Position.south) {
-      if (kDebugMode) debugPrint('🎯 [BID WHIST] Not player\'s turn, waiting for AI');
+      if (kDebugMode)
+        debugPrint('🎯 [BID WHIST] Not player\'s turn, waiting for AI');
       return;
     }
 
@@ -317,7 +320,8 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => WidowWhistBiddingDialog(
         onBid: (tricks) {
-          if (kDebugMode) debugPrint('🎯 [WIDOW WHIST] Player bid: $tricks tricks');
+          if (kDebugMode)
+            debugPrint('🎯 [WIDOW WHIST] Player bid: $tricks tricks');
           widget.engine.placeWidowWhistBid(tricks);
         },
       ),
@@ -326,11 +330,13 @@ class _GameScreenState extends State<GameScreen> {
 
   /// Show Oh Hell sequential bidding dialog
   void _showOhHellBiddingDialog(BuildContext context, GameState state) {
-    if (kDebugMode) debugPrint('🎯 [OH HELL] Showing sequential bidding dialog');
+    if (kDebugMode)
+      debugPrint('🎯 [OH HELL] Showing sequential bidding dialog');
 
     // Check if it's the player's turn to bid
     if (state.currentBidder != Position.south) {
-      if (kDebugMode) debugPrint('🎯 [OH HELL] Not player\'s turn, waiting for AI');
+      if (kDebugMode)
+        debugPrint('🎯 [OH HELL] Not player\'s turn, waiting for AI');
       return;
     }
 
