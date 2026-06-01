@@ -190,8 +190,8 @@ class _GameScreenState extends State<GameScreen> {
     if (state.showBiddingDialog && !_biddingOverlayShown) {
       if (kDebugMode) {
         debugPrint(
-            '🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays',
-          );
+          '🎯 [UI TIMING] Triggering bidding sheet in _handleOverlays',
+        );
       }
       _biddingOverlayShown = true;
       _showBiddingSheet(context, state);
